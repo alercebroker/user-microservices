@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "alerce-reports-api"
+name = "reports"
 version = "0.1.0"
 description = ""
 authors = ["ALeRCE Broker <alercebroker@gmail.com>"]
