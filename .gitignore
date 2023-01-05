@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# PyCharm
+.idea
+
+# No poetry.lock in libraries
+libs/**/poetry.lock
