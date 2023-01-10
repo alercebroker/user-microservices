@@ -64,14 +64,11 @@ class MongoConnection:
     def collection(self) -> MongoCollection:
         return self.db[self._config.collection]
 
-    def __del__(self):
-        self.close()
-
-    def connect(self):
+    async def connect(self):
         """Establishes connection to a database and initializes a session."""
         self._client = AsyncIOMotorClient(connect=True, **self._config)
 
-    def close(self):
+    async def close(self):
         if self._client:
             self._client.close()
             self._client = None
