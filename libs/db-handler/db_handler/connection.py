@@ -1,10 +1,12 @@
 from collections import UserDict
-from logging import getLogger
 from typing import Any
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
 
-logger = getLogger("db_handler")
+
+# Aliases (this avoids making motor a hard dependency por the APIs)
+MongoDatabase = AsyncIOMotorDatabase
+MongoCollection = AsyncIOMotorCollection
 
 
 class _MongoConfig(UserDict):
@@ -19,7 +21,7 @@ class _MongoConfig(UserDict):
     through the property `db`.
     """
 
-    REQUIRED_KEYS = {"host", "username", "password", "port", "database"}
+    REQUIRED_KEYS = {"host", "username", "password", "port", "database", "collection"}
 
     def __init__(self, seq=None, **kwargs):
         super().__init__(seq, **kwargs)
@@ -27,14 +29,19 @@ class _MongoConfig(UserDict):
             missing = ", ".join(
                 key.upper() for key in self.REQUIRED_KEYS.difference(self.keys())
             )
-            logger.error(f"Invalid configuration. Missing keys: {missing}")
             raise ValueError(f"Invalid configuration. Missing keys: {missing}")
         self._db = self.pop("database")
+        self._collection = self.pop("collection")
 
     @property
     def db(self) -> str:
         """str: database name"""
         return self._db
+
+    @property
+    def collection(self) -> str:
+        """str: collection name"""
+        return self._collection
 
     def __setitem__(self, key: str, value: Any):
         """Converts keys from (case-insensitive) `snake_case` to `lowerCamelCase`"""
@@ -45,58 +52,26 @@ class _MongoConfig(UserDict):
 
 
 class MongoConnection:
-    def __init__(self, config: dict | None = None):
-        self.config = config
+    def __init__(self, config: dict):
+        self._config = _MongoConfig(config)
         self._client = None
-        self._db = None
 
     @property
-    def db(self) -> AsyncIOMotorDatabase | None:
-        return self._db
+    def db(self) -> MongoDatabase:
+        return self._client[self._config.db]
 
     @property
-    def config(self) -> _MongoConfig | None:
-        return self.__config
+    def collection(self) -> MongoCollection:
+        return self.db[self._config.collection]
 
-    @config.setter
-    def config(self, config: dict | None):
-        self.__config = _MongoConfig(config) if config else None
+    def __del__(self):
+        self.close()
 
-    def connect(self, config: dict | None = None):
-        """Establishes connection to a database and initializes a session.
-
-        Parameters
-        ----------
-        config : dict
-            Database configuration. For example:
-
-            .. code-block:: python
-
-                config = {
-                    "HOST": "host",
-                    "USERNAME": "username",
-                    "PASSWORD": "pwd",
-                    "PORT": 27017, # mongo typically runs on port 27017.
-                                   # Notice that we use an int here.
-                    "DATABASE": "database",
-                    "AUTH_SOURCE": "admin" # could be admin or the same as DATABASE
-                }
-        """
-        if self._client:
-            logger.warning("Existing connection to MongoDB will be closed")
-            self.close()
-        if config:
-            self.config = config
-        if self.config is None:
-            logger.error("Cannot connect: No configuration provided for client")
-            raise ValueError("No configuration provided for client")
-        self._client = AsyncIOMotorClient(**self.config)
-        logger.info(f"Connected to MongoDB at {self.config['host']}:{self.config['port']}")
-        self._db = self._client[self.config.db]
-        logger.debug(f"Connected to database {self.config.db}")
+    def connect(self):
+        """Establishes connection to a database and initializes a session."""
+        self._client = AsyncIOMotorClient(connect=True, **self._config)
 
     def close(self):
-        self._client.close()
-        logger.info("Connection to MongoDB closed")
-        self._client = None
-        self._db = None
+        if self._client:
+            self._client.close()
+            self._client = None
