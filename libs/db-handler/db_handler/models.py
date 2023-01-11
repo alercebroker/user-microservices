@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from bson import ObjectId
 from pydantic import BaseModel, Field
 
@@ -20,6 +22,8 @@ class PyObjectId(ObjectId):
 
 
 class BaseModelWithId(BaseModel):
+    __tablename__: ClassVar[str]
+
     id: PyObjectId = Field(default_factory=ObjectId, description="Unique identifier in DB", alias="_id")
 
     class Config:

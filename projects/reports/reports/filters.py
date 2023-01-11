@@ -29,23 +29,23 @@ class _BaseQuery:
         _QueryRecipe("object", ["$regex"], ["object"])
     )
 
-    def _match(self):
+    def _match(self) -> dict:
         def query(ops, attrs):
             return {op: getattr(self, attr) for op, attr in zip(ops, attrs) if getattr(self, attr) is not None}
 
         query = {field: query(ops, attrs) for field, ops, attrs in self._recipes}
         return {"$match": {k: v for k, v in query.items() if v}}
 
-    def _sort(self):
+    def _sort(self) -> dict:
         return {"$sort": {self.order_by: int(self.direction)}}
 
-    def _skip(self):
+    def _skip(self) -> dict:
         return {"$skip": (self.page - 1) * self.page_size}
 
-    def _limit(self):
+    def _limit(self) -> dict:
         return {"$limit": self.page_size}
 
-    def pipeline(self):
+    def pipeline(self) -> list[dict]:
         return [self._match(), self._sort(), self._skip(), self._limit()]
 
 
@@ -59,7 +59,7 @@ class QueryByObject(_BaseQuery):
     order_by: Literal[tuple(ByObjectReport.__fields__)] = Query("last_date", description="Field to sort by")
 
     @staticmethod
-    def _group():
+    def _group() -> dict:
         return {
             "$group": {
                 "_id": "$object",
@@ -72,7 +72,7 @@ class QueryByObject(_BaseQuery):
             }
         }
 
-    def pipeline(self):
+    def pipeline(self) -> list[dict]:
         return [self._match(), self._group(), self._sort(), self._skip(), self._limit()]
 
 
@@ -81,7 +81,7 @@ class QueryByDay(_BaseQuery):
     order_by: Literal[tuple(ByDayReport.__fields__)] = Query("day", description="Field to sort by")
 
     @staticmethod
-    def _group():
+    def _group() -> dict:
         return {
             "$group": {
                 "_id": {"$dateTrunc": {"date": {"$toDate": "$date"}, "unit": "day"}},
@@ -89,5 +89,5 @@ class QueryByDay(_BaseQuery):
             }
         }
 
-    def pipeline(self):
+    def pipeline(self) -> list[dict]:
         return [self._match(), self._group(), self._sort(), self._skip(), self._limit()]

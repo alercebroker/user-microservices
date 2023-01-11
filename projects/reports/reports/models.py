@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone
+from typing import ClassVar
 
 from db_handler.models import BaseModelWithId
 from pydantic import BaseModel, Field
@@ -18,6 +19,8 @@ class InsertReport(BaseModel):
 
 
 class Report(InsertReport, BaseModelWithId):
+    __tablename__: ClassVar[str] = "reports"
+
     date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
 
 

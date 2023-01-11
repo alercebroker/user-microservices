@@ -7,7 +7,6 @@ class MongoSettings(BaseSettings):
     username: str
     password: str
     database: str
-    collection: str
 
     class Config:
         env_prefix = "mongodb_"

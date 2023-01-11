@@ -1,12 +1,10 @@
 from collections import UserDict
 from typing import Any
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCursor
+from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
 
-
-# Aliases (this avoids making motor a hard dependency por the APIs)
-MongoDatabase = AsyncIOMotorDatabase
-MongoCollection = AsyncIOMotorCollection
+from .models import BaseModelWithId
 
 
 class _MongoConfig(UserDict):
@@ -21,7 +19,7 @@ class _MongoConfig(UserDict):
     through the property `db`.
     """
 
-    REQUIRED_KEYS = {"host", "username", "password", "port", "database", "collection"}
+    REQUIRED_KEYS = {"host", "username", "password", "port", "database"}
 
     def __init__(self, seq=None, **kwargs):
         super().__init__(seq, **kwargs)
@@ -31,17 +29,11 @@ class _MongoConfig(UserDict):
             )
             raise ValueError(f"Invalid configuration. Missing keys: {missing}")
         self._db = self.pop("database")
-        self._collection = self.pop("collection")
 
     @property
     def db(self) -> str:
         """str: database name"""
         return self._db
-
-    @property
-    def collection(self) -> str:
-        """str: collection name"""
-        return self._collection
 
     def __setitem__(self, key: str, value: Any):
         """Converts keys from (case-insensitive) `snake_case` to `lowerCamelCase`"""
@@ -57,18 +49,42 @@ class MongoConnection:
         self._client = None
 
     @property
-    def db(self) -> MongoDatabase:
+    def db(self) -> AsyncIOMotorDatabase:
         return self._client[self._config.db]
-
-    @property
-    def collection(self) -> MongoCollection:
-        return self.db[self._config.collection]
 
     async def connect(self):
         """Establishes connection to a database and initializes a session."""
         self._client = AsyncIOMotorClient(connect=True, **self._config)
 
     async def close(self):
-        if self._client:
-            self._client.close()
-            self._client = None
+        if self._client is None:
+            raise ValueError("Connection is not established")
+        self._client.close()
+        self._client = None
+
+    def find_one(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+        return self.db[model.__tablename__].find_one(*args, **kwargs)
+
+    def find(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
+        return self.db[model.__tablename__].find(*args, **kwargs)
+
+    def delete_one(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
+        return self.db[model.__tablename__].delete_one(*args, **kwargs)
+
+    def delete_many(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
+        return self.db[model.__tablename__].delete_many(*args, **kwargs)
+
+    def insert_one(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertOneResult:
+        return self.db[model.__tablename__].insert_one(*args, **kwargs)
+
+    def insert_many(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertManyResult:
+        return self.db[model.__tablename__].insert_many(*args, **kwargs)
+
+    def update_one(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
+        return self.db[model.__tablename__].update_one(*args, **kwargs)
+
+    def update_many(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
+        return self.db[model.__tablename__].update_many(*args, **kwargs)
+
+    def aggregate(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
+        return self.db[model.__tablename__].aggregate(*args, **kwargs)
