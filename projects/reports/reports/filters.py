@@ -29,21 +29,24 @@ class _BaseQuery:
         _QueryRecipe("object", ["$regex"], ["object"])
     )
 
-    def match(self):
+    def _match(self):
         def query(ops, attrs):
             return {op: getattr(self, attr) for op, attr in zip(ops, attrs) if getattr(self, attr) is not None}
 
         query = {field: query(ops, attrs) for field, ops, attrs in self._recipes}
         return {"$match": {k: v for k, v in query.items() if v}}
 
-    def sort(self):
+    def _sort(self):
         return {"$sort": {self.order_by: int(self.direction)}}
 
-    def skip(self):
+    def _skip(self):
         return {"$skip": (self.page - 1) * self.page_size}
 
-    def limit(self):
+    def _limit(self):
         return {"$limit": self.page_size}
+
+    def pipeline(self):
+        return [self._match(), self._sort(), self._skip(), self._limit()]
 
 
 @dataclass
@@ -56,7 +59,7 @@ class QueryByObject(_BaseQuery):
     order_by: Literal[tuple(ReportByObject.__fields__)] = Query("last_date", description="Field to sort by")
 
     @staticmethod
-    def group():
+    def _group():
         return {
             "$group": {
                 "_id": "$object",
@@ -68,3 +71,10 @@ class QueryByObject(_BaseQuery):
                 "count": {"$count": {}}
             }
         }
+
+    @staticmethod
+    def _set():
+        return {"$set": {"object": "$_id"}}
+
+    def pipeline(self):
+        return [self._match(), self._group(), self._set(), self._sort(), self._skip(), self._limit()]

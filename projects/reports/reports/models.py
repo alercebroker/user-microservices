@@ -37,7 +37,7 @@ class UpdateReport(BaseModel):
 
 
 class ReportByObject(BaseModel):
-    object: str = Field(..., description="Reported object ID", alias="_id")
+    object: str = Field(..., description="Reported object ID")
     first_date: datetime = Field(..., description="Date of first report")
     last_date: datetime = Field(..., description="Date of last report")
     count: int = Field(..., description="Number of reports")
