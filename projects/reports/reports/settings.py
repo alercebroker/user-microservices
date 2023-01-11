@@ -11,3 +11,4 @@ class MongoSettings(BaseSettings):
 
     class Config:
         env_prefix = "mongodb_"
+        env_file = ".env"
