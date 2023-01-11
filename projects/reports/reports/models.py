@@ -33,10 +33,10 @@ class UpdateReport(BaseModel):
 
 
 class ReportByObject(BaseModel):
-    object: str = Field(..., description="Reported object ID")
+    object: str = Field(..., description="Reported object ID", alias="_id")
     first_date: datetime = Field(..., description="Date of first report")
     last_date: datetime = Field(..., description="Date of last report")
     count: int = Field(..., description="Number of reports")
-    source: str = Field(..., description="Service of origin of the report")
-    report_type: str = Field(..., description="Type of report")
+    # source: str = Field(..., description="Service of origin of the report")
+    # report_type: str = Field(..., description="Type of report")
     users: list[str] = Field(..., description="Reporting users")

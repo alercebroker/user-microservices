@@ -13,6 +13,10 @@ async def query_reports(collection: MongoCollection, q: QueryByReport) -> list[d
     return await collection.aggregate([q.match(), q.sort(), q.skip(), q.limit()]).to_list(q.page_size)
 
 
+async def query_reports_by_object(collection: MongoCollection, q: QueryByObject) -> list[dict]:
+    return await collection.aggregate([q.match(), q.group(), q.sort(), q.skip(), q.limit()]).to_list(q.page_size)
+
+
 async def create_report(collection: MongoCollection, report: InsertReport) -> dict | None:
     report = Report(**report.dict())
     insert = await collection.insert_one(encoders.jsonable_encoder(report))

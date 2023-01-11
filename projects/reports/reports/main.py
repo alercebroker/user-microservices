@@ -2,8 +2,8 @@ from fastapi import FastAPI, Body, Depends, HTTPException
 
 from . import crud
 from .database import connection
-from .filters import QueryByReport
-from .models import Report, InsertReport, UpdateReport
+from .filters import QueryByReport, QueryByObject
+from .models import Report, InsertReport, UpdateReport, ReportByObject
 
 
 app = FastAPI()
@@ -22,6 +22,11 @@ async def shutdown():
 @app.get("/", response_model=list[Report], response_description="Report list")
 async def get_report_list(q: QueryByReport = Depends()):
     return await crud.query_reports(connection.collection, q)
+
+
+@app.get("/by_object", response_model=list[ReportByObject], response_description="Report list grouped by object")
+async def get_report_list(q: QueryByObject = Depends()):
+    return await crud.query_reports_by_object(connection.collection, q)
 
 
 @app.post("/", response_model=Report, response_description="Created report", status_code=201)

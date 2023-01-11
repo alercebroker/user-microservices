@@ -54,3 +54,15 @@ class QueryByReport(_BaseQuery):
 @dataclass
 class QueryByObject(_BaseQuery):
     order_by: Literal[tuple(ReportByObject.__fields__)] = Query("last_date", description="Field to sort by")
+
+    @staticmethod
+    def group():
+        return {
+            "$group": {
+                "_id": "$object",
+                "first_date": {"$min": "$date"},
+                "last_date": {"$max": "$date"},
+                "users": {"$addToSet": "$owner"},
+                "count": {"$count": {}}
+            }
+        }
