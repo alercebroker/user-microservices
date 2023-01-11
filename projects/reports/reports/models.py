@@ -18,12 +18,6 @@ class InsertReport(BaseModel):
     owner: str = Field(..., description="Report owner")
 
 
-class Report(InsertReport, BaseModelWithId):
-    __tablename__: ClassVar[str] = "reports"
-
-    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
-
-
 class UpdateReport(BaseModel):
     object: str | None = Field(None, description="Reported object ID")
     solved: bool | None = Field(None, description="Whether the report has been solved")
@@ -33,8 +27,27 @@ class UpdateReport(BaseModel):
     owner: str | None = Field(None, description="Report owner")
 
 
-class ByObjectReport(BaseModel):
-    object: str = Field(..., description="Reported object ID", alias="_id")
+class Report(InsertReport, BaseModelWithId):
+    __tablename__: ClassVar[str] = "reports"
+
+    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
+
+
+class PaginatedModel(BaseModel):
+    count: int = Field(..., description="Total number of results matching query")
+    next: int | None = Field(..., description="Next page number (null if no next page)")
+    previous: int | None = Field(..., description="Previous page number (null if no previous page)")
+
+
+class PaginatedReports(PaginatedModel):
+    results: list[Report] = Field(..., description="List of reports matching query")
+
+    class Config(BaseModelWithId.Config):
+        """This class is necessary to parse ObjectID fields nested in results"""
+
+
+class ReportByObject(BaseModel):
+    object: str = Field(..., description="Reported object ID")
     first_date: datetime = Field(..., description="Date of first report")
     last_date: datetime = Field(..., description="Date of last report")
     count: int = Field(..., description="Number of reports")
@@ -43,6 +56,15 @@ class ByObjectReport(BaseModel):
     users: list[str] = Field(..., description="Reporting user(s)")
 
 
-class ByDayReport(BaseModel):
-    day: date = Field(..., description="Day with aggregate reports", alias="_id")
+class PaginatedReportsByObject(PaginatedModel):
+    results: list[ReportByObject] = Field(..., description="List of objects matching query")
+
+
+class ReportByDay(BaseModel):
+    day: date = Field(..., description="Day with aggregate reports")
     count: int = Field(..., description="Number of reports in the day")
+
+
+class PaginatedReportsByDay(PaginatedModel):
+    results: list[ReportByDay] = Field(..., description="List of days matching query")
+
