@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import ClassVar
 
 from bson import ObjectId
@@ -27,4 +28,4 @@ class BaseModelWithId(BaseModel):
     id: PyObjectId = Field(default_factory=ObjectId, description="Unique identifier in DB", alias="_id")
 
     class Config:
-        json_encoders = {ObjectId: str}
+        json_encoders = {ObjectId: str, datetime: lambda x: x.isoformat()}
