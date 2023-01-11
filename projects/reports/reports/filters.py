@@ -72,12 +72,8 @@ class QueryByObject(_BaseQuery):
             }
         }
 
-    @staticmethod
-    def _set():
-        return {"$set": {"object": "$_id"}}
-
     def pipeline(self):
-        return [self._match(), self._group(), self._set(), self._sort(), self._skip(), self._limit()]
+        return [self._match(), self._group(), self._sort(), self._skip(), self._limit()]
 
 
 @dataclass
@@ -93,9 +89,5 @@ class QueryByDay(_BaseQuery):
             }
         }
 
-    @staticmethod
-    def _set():
-        return {"$set": {"day": "$_id"}}
-
     def pipeline(self):
-        return [self._match(), self._group(), self._set(), self._sort(), self._skip(), self._limit()]
+        return [self._match(), self._group(), self._sort(), self._skip(), self._limit()]

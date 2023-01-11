@@ -8,16 +8,6 @@ def now_utc():
     return datetime.now(timezone.utc)
 
 
-class Report(BaseModelWithId):
-    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
-    object: str = Field(..., description="Reported object ID")
-    solved: bool = Field(..., description="Whether the report has been solved")
-    source: str = Field(..., description="Service of origin of the report")
-    observation: str = Field(..., description="Class assigned to the object")
-    report_type: str = Field(..., description="Type of report")
-    owner: str = Field(..., description="Report owner")
-
-
 class InsertReport(BaseModel):
     object: str = Field(..., description="Reported object ID")
     solved: bool = Field(..., description="Whether the report has been solved")
@@ -25,6 +15,10 @@ class InsertReport(BaseModel):
     observation: str = Field(..., description="Class assigned to the object")
     report_type: str = Field(..., description="Type of report")
     owner: str = Field(..., description="Report owner")
+
+
+class Report(InsertReport, BaseModelWithId):
+    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
 
 
 class UpdateReport(BaseModel):
@@ -37,7 +31,7 @@ class UpdateReport(BaseModel):
 
 
 class ByObjectReport(BaseModel):
-    object: str = Field(..., description="Reported object ID")
+    object: str = Field(..., description="Reported object ID", alias="_id")
     first_date: datetime = Field(..., description="Date of first report")
     last_date: datetime = Field(..., description="Date of last report")
     count: int = Field(..., description="Number of reports")
@@ -47,5 +41,5 @@ class ByObjectReport(BaseModel):
 
 
 class ByDayReport(BaseModel):
-    day: date = Field(..., description="Day with aggregate reports")
+    day: date = Field(..., description="Day with aggregate reports", alias="_id")
     count: int = Field(..., description="Number of reports in the day")
