@@ -14,7 +14,16 @@ class Report(BaseModelWithId):
     owner: str = Field(..., description="Report owner")
 
 
-class ReportIn(BaseModel):
+class InsertReport(BaseModel):
+    object: str = Field(None, description="Reported object ID")
+    solved: bool = Field(None, description="Whether the report has been solved")
+    source: str = Field(None, description="Service of origin of the report")
+    observation: str = Field(None, description="Class assigned to the object")
+    report_type: str = Field(None, description="Type of report")
+    owner: str = Field(None, description="Report owner")
+
+
+class UpdateReport(BaseModel):
     object: str | None = Field(None, description="Reported object ID")
     solved: bool | None = Field(None, description="Whether the report has been solved")
     source: str | None = Field(None, description="Service of origin of the report")
