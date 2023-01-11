@@ -1,29 +1,53 @@
 from datetime import datetime
-from typing import Literal, Pattern
-from pydantic.dataclasses import dataclass
+from typing import Literal, Pattern, NamedTuple, ClassVar
 
 from fastapi import Query
+from pydantic.dataclasses import dataclass
 
 from .models import Report, ReportByObject
 
 
+class _QueryRecipe(NamedTuple):
+    field: str
+    operators: list[str]
+    attributes: list[str]
+
+
 @dataclass
-class BaseQuery:
+class _BaseQuery:
     date_after: datetime | None = Query(None, description="Starting date of reports")
     date_before: datetime | None = Query(None, description="End date of reports")
-    object: str | None = Query(None, description="Reports for this object ID")
-    object_contains: Pattern | None = Query(None, description="Reports for object IDs matching regex")
+    object: Pattern | None = Query(None, description="Reports for object IDs matching regex")
     owned: bool = Query(False, description="Whether to include only reports owned by requesting user")
     page: int = Query(1, description="Page for paginated results")
     page_size: int = Query(10, description="Number of reports per page")
-    order_mode: Literal["ASC", "DESC"] = Query("DESC", description="Sort by ascending or descending values")
+    order_by: Literal[""] = Query("", description="NEEDS TO BE OVERRIDEN!!")
+    direction: Literal["1", "-1"] = Query(-1, description="Sort by ascending or descending values")
+
+    _recipes: ClassVar[tuple[_QueryRecipe]] = (
+        _QueryRecipe("date", ["$gte", "$lte"], ["date_after", "date_before"]),
+        _QueryRecipe("object", ["$regex"], ["object"])
+    )
+
+    def query(self):
+        query = {field: self._query(ops, attrs) for field, ops, attrs in self._recipes}
+        return {k: v for k, v in query.items() if v}
+
+    def sort(self, as_dict=False):
+        direction = int(self.direction)
+        if as_dict:
+            return {self.order_by: direction}
+        return [(self.order_by, direction)]
+
+    def _query(self, ops, attrs):
+        return {op: getattr(self, attr) for op, attr in zip(ops, attrs) if getattr(self, attr) is not None}
 
 
 @dataclass
-class QueryByReport(BaseQuery):
+class QueryByReport(_BaseQuery):
     order_by: Literal[tuple(Report.__fields__)] = Query("date", description="Field to sort by")
 
 
 @dataclass
-class QueryByObject(BaseQuery):
+class QueryByObject(_BaseQuery):
     order_by: Literal[tuple(ReportByObject.__fields__)] = Query("last_date", description="Field to sort by")
