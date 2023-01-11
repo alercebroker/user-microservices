@@ -2,7 +2,7 @@ from db_handler.connection import MongoCollection
 from fastapi import encoders
 
 from .filters import QueryByReport, QueryByObject
-from .models import Report, InsertReport, UpdateReport, ReportByObject
+from .models import Report, InsertReport, UpdateReport
 
 
 async def get_report(collection: MongoCollection, report_id: str) -> dict | None:
@@ -10,9 +10,7 @@ async def get_report(collection: MongoCollection, report_id: str) -> dict | None
 
 
 async def query_reports(collection: MongoCollection, q: QueryByReport) -> list[dict]:
-    limit = q.page_size
-    skip = (q.page - 1) * limit
-    return await collection.find(q.query()).sort(q.sort()).skip(skip).limit(limit).to_list(limit)
+    return await collection.aggregate([q.match(), q.sort(), q.skip(), q.limit()]).to_list(q.page_size)
 
 
 async def create_report(collection: MongoCollection, report: InsertReport) -> dict | None:

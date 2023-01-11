@@ -29,18 +29,21 @@ class _BaseQuery:
         _QueryRecipe("object", ["$regex"], ["object"])
     )
 
-    def query(self):
-        query = {field: self._query(ops, attrs) for field, ops, attrs in self._recipes}
-        return {k: v for k, v in query.items() if v}
+    def match(self):
+        def query(ops, attrs):
+            return {op: getattr(self, attr) for op, attr in zip(ops, attrs) if getattr(self, attr) is not None}
 
-    def sort(self, as_dict=False):
-        direction = int(self.direction)
-        if as_dict:
-            return {self.order_by: direction}
-        return [(self.order_by, direction)]
+        query = {field: query(ops, attrs) for field, ops, attrs in self._recipes}
+        return {"$match": {k: v for k, v in query.items() if v}}
 
-    def _query(self, ops, attrs):
-        return {op: getattr(self, attr) for op, attr in zip(ops, attrs) if getattr(self, attr) is not None}
+    def sort(self):
+        return {"$sort": {self.order_by: int(self.direction)}}
+
+    def skip(self):
+        return {"$skip": (self.page - 1) * self.page_size}
+
+    def limit(self):
+        return {"$limit": self.page_size}
 
 
 @dataclass
