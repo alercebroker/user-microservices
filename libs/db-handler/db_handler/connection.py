@@ -62,29 +62,29 @@ class MongoConnection:
         self._client.close()
         self._client = None
 
-    def find_one(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
-        return self.db[model.__tablename__].find_one(*args, **kwargs)
+    async def find_one(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+        return await self.db[model.__tablename__].find_one(*args, **kwargs)
 
     def find(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
         return self.db[model.__tablename__].find(*args, **kwargs)
 
-    def delete_one(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
-        return self.db[model.__tablename__].delete_one(*args, **kwargs)
+    async def delete_one(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
+        return await self.db[model.__tablename__].delete_one(*args, **kwargs)
 
-    def delete_many(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
-        return self.db[model.__tablename__].delete_many(*args, **kwargs)
+    async def delete_many(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
+        return await self.db[model.__tablename__].delete_many(*args, **kwargs)
 
-    def insert_one(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertOneResult:
-        return self.db[model.__tablename__].insert_one(*args, **kwargs)
+    async def insert_one(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertOneResult:
+        return await self.db[model.__tablename__].insert_one(*args, **kwargs)
 
-    def insert_many(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertManyResult:
-        return self.db[model.__tablename__].insert_many(*args, **kwargs)
+    async def insert_many(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertManyResult:
+        return await self.db[model.__tablename__].insert_many(*args, **kwargs)
 
-    def update_one(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
-        return self.db[model.__tablename__].update_one(*args, **kwargs)
+    async def update_one(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
+        return await self.db[model.__tablename__].update_one(*args, **kwargs)
 
-    def update_many(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
-        return self.db[model.__tablename__].update_many(*args, **kwargs)
+    async def update_many(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
+        return await self.db[model.__tablename__].update_many(*args, **kwargs)
 
     def aggregate(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
         return self.db[model.__tablename__].aggregate(*args, **kwargs)
