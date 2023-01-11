@@ -1,11 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from db_handler.models import BaseModelWithId
 from pydantic import BaseModel, Field
 
 
+def now_utc():
+    return datetime.now(timezone.utc)
+
+
 class Report(BaseModelWithId):
-    date: datetime = Field(default_factory=datetime.now, description="Date the report was generated")
+    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
     object: str = Field(..., description="Reported object ID")
     solved: bool = Field(..., description="Whether the report has been solved")
     source: str = Field(..., description="Service of origin of the report")
