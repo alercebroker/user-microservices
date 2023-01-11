@@ -3,7 +3,7 @@ from fastapi import FastAPI, Body, Depends, HTTPException
 from . import crud
 from .database import connection
 from .filters import QueryByReport, QueryByObject, QueryByDay
-from .models import Report, InsertReport, UpdateReport, PaginatedReports, PaginatedReportsByObject, PaginatedReportsByDay
+from .models import Report, InsertReport, PaginatedReports, PaginatedReportsByObject, PaginatedReportsByDay
 
 
 app = FastAPI()
@@ -48,8 +48,8 @@ async def get_single_report(report_id: str):
     return report
 
 
-@app.patch("/{report_id}", response_model=Report, response_description="Report updated")
-async def update_existing_report(report_id: str, report: UpdateReport = Body(...)):
+@app.put("/{report_id}", response_model=Report, response_description="Report updated")
+async def update_existing_report(report_id: str, report: InsertReport = Body(...)):
     """Updates an existing report based on its ID"""
     report = await crud.update_report(connection, report_id, report)
     if report is None:

@@ -18,15 +18,6 @@ class InsertReport(BaseModel):
     owner: str = Field(..., description="Report owner")
 
 
-class UpdateReport(BaseModel):
-    object: str | None = Field(None, description="Reported object ID")
-    solved: bool | None = Field(None, description="Whether the report has been solved")
-    source: str | None = Field(None, description="Service of origin of the report")
-    observation: str | None = Field(None, description="Class assigned to the object")
-    report_type: str | None = Field(None, description="Type of report")
-    owner: str | None = Field(None, description="Report owner")
-
-
 class Report(InsertReport, BaseModelWithId):
     __tablename__: ClassVar[str] = "reports"
 

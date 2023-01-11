@@ -2,7 +2,7 @@ from db_handler.connection import MongoConnection
 from fastapi import encoders
 
 from .filters import BaseQuery
-from .models import Report, InsertReport, UpdateReport
+from .models import Report, InsertReport
 
 
 async def create_report(connection: MongoConnection, report: InsertReport) -> dict | None:
@@ -26,10 +26,8 @@ async def read_paginated_reports(connection: MongoConnection, q: BaseQuery) -> d
     }
 
 
-async def update_report(connection: MongoConnection, report_id: str, report: UpdateReport) -> dict | None:
-    report = {k: v for k, v in report.dict().items()}
-    if len(report):
-        await connection.update_one(Report, {"_id": report_id}, {"$set": report})
+async def update_report(connection: MongoConnection, report_id: str, report: InsertReport) -> dict | None:
+    await connection.update_one(Report, {"_id": report_id}, {"$set": report.dict()})
     return await connection.find_one(Report, {"_id": report_id})
 
 
