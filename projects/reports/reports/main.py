@@ -25,7 +25,7 @@ async def get_report_list(q: QueryByReport = Depends()):
 
 
 @app.get("/by_object", response_model=list[ReportByObject], response_description="Report list grouped by object")
-async def get_report_list(q: QueryByObject = Depends()):
+async def get_report_list_by_object(q: QueryByObject = Depends()):
     return await crud.query_reports_by_object(connection.collection, q)
 
 

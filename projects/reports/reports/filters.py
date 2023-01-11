@@ -63,6 +63,8 @@ class QueryByObject(_BaseQuery):
                 "first_date": {"$min": "$date"},
                 "last_date": {"$max": "$date"},
                 "users": {"$addToSet": "$owner"},
+                "source": {"$addToSet": "$source"},
+                "report_type": {"$addToSet": "$report_type"},
                 "count": {"$count": {}}
             }
         }
