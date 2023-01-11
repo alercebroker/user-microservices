@@ -22,7 +22,7 @@ class BaseQuery:
     page: int = Query(1, description="Page for paginated results", ge=1)
     page_size: int = Query(10, description="Number of reports per page", ge=1)
     order_by: Literal[""] = Query("", description="NEEDS TO BE OVERRIDEN!!")
-    direction: Literal["1", "-1"] = Query(-1, description="Sort by ascending or descending values")
+    direction: Literal["1", "-1"] = Query("-1", description="Sort by ascending or descending values")
 
     _recipes: ClassVar[tuple[_QueryRecipe]] = (
         _QueryRecipe("date", ["$gte", "$lte"], ["date_after", "date_before"]),
@@ -60,12 +60,12 @@ class BaseQuery:
 
 @dataclass
 class QueryByReport(BaseQuery):
-    order_by: Literal[tuple(Report.__fields__)] = Query("date", description="Field to sort by")
+    order_by: Literal[Report.get_fields()] = Query("date", description="Field to sort by")
 
 
 @dataclass
 class QueryByObject(BaseQuery):
-    order_by: Literal[tuple(ReportByObject.__fields__)] = Query("last_date", description="Field to sort by")
+    order_by: Literal[ReportByObject.get_fields()] = Query("last_date", description="Field to sort by")
 
     @staticmethod
     def group() -> dict:
@@ -91,7 +91,7 @@ class QueryByObject(BaseQuery):
 
 @dataclass
 class QueryByDay(QueryByObject):
-    order_by: Literal[tuple(ReportByDay.__fields__)] = Query("day", description="Field to sort by")
+    order_by: Literal[ReportByDay.get_fields()] = Query("day", description="Field to sort by")
 
     @staticmethod
     def group() -> dict:

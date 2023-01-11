@@ -2,11 +2,17 @@ from datetime import date, datetime, timezone
 from typing import ClassVar
 
 from db_handler.models import BaseModelWithId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel as PydanticBaseModel, Field
 
 
 def now_utc():
     return datetime.now(timezone.utc)
+
+
+class BaseModel(PydanticBaseModel):
+    @classmethod
+    def get_fields(cls, alias=True):
+        return tuple(cls.schema(alias).get("properties"))
 
 
 class InsertReport(BaseModel):
@@ -58,4 +64,3 @@ class ReportByDay(BaseModel):
 
 class PaginatedReportsByDay(PaginatedModel):
     results: list[ReportByDay] = Field(..., description="List of days matching query")
-
