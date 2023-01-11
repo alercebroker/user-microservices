@@ -1,8 +1,14 @@
 from db_handler.connection import MongoCollection
 from fastapi import encoders
 
-from .filters import QueryByReport, QueryByObject
+from .filters import QueryByReport, QueryByObject, QueryByDay
 from .models import Report, InsertReport, UpdateReport
+
+
+async def create_report(collection: MongoCollection, report: InsertReport) -> dict | None:
+    report = Report(**report.dict())
+    insert = await collection.insert_one(encoders.jsonable_encoder(report))
+    return await collection.find_one({"_id": insert.inserted_id})
 
 
 async def get_report(collection: MongoCollection, report_id: str) -> dict | None:
@@ -17,10 +23,8 @@ async def query_reports_by_object(collection: MongoCollection, q: QueryByObject)
     return await collection.aggregate(q.pipeline()).to_list(q.page_size)
 
 
-async def create_report(collection: MongoCollection, report: InsertReport) -> dict | None:
-    report = Report(**report.dict())
-    insert = await collection.insert_one(encoders.jsonable_encoder(report))
-    return await collection.find_one({"_id": insert.inserted_id})
+async def count_by_day(collection: MongoCollection, q: QueryByDay) -> list[dict]:
+    return await collection.aggregate(q.pipeline()).to_list(q.page_size)
 
 
 async def update_report(collection: MongoCollection, report_id: str, report: UpdateReport) -> dict | None:

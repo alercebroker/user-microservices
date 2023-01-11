@@ -4,7 +4,7 @@ from typing import Literal, Pattern, NamedTuple, ClassVar
 from fastapi import Query
 from pydantic.dataclasses import dataclass
 
-from .models import Report, ReportByObject
+from .models import Report, ByObjectReport, ByDayReport
 
 
 class _QueryRecipe(NamedTuple):
@@ -56,7 +56,7 @@ class QueryByReport(_BaseQuery):
 
 @dataclass
 class QueryByObject(_BaseQuery):
-    order_by: Literal[tuple(ReportByObject.__fields__)] = Query("last_date", description="Field to sort by")
+    order_by: Literal[tuple(ByObjectReport.__fields__)] = Query("last_date", description="Field to sort by")
 
     @staticmethod
     def _group():
@@ -75,6 +75,27 @@ class QueryByObject(_BaseQuery):
     @staticmethod
     def _set():
         return {"$set": {"object": "$_id"}}
+
+    def pipeline(self):
+        return [self._match(), self._group(), self._set(), self._sort(), self._skip(), self._limit()]
+
+
+@dataclass
+class QueryByDay(_BaseQuery):
+    order_by: Literal[tuple(ByDayReport.__fields__)] = Query("day", description="Field to sort by")
+
+    @staticmethod
+    def _group():
+        return {
+            "$group": {
+                "_id": {"$dateTrunc": {"date": {"$toDate": "$date"}, "unit": "day"}},
+                "count": {"$count": {}}
+            }
+        }
+
+    @staticmethod
+    def _set():
+        return {"$set": {"day": "$_id"}}
 
     def pipeline(self):
         return [self._match(), self._group(), self._set(), self._sort(), self._skip(), self._limit()]

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from db_handler.models import BaseModelWithId
 from pydantic import BaseModel, Field
@@ -36,7 +36,7 @@ class UpdateReport(BaseModel):
     owner: str | None = Field(None, description="Report owner")
 
 
-class ReportByObject(BaseModel):
+class ByObjectReport(BaseModel):
     object: str = Field(..., description="Reported object ID")
     first_date: datetime = Field(..., description="Date of first report")
     last_date: datetime = Field(..., description="Date of last report")
@@ -44,3 +44,8 @@ class ReportByObject(BaseModel):
     source: list[str] = Field(..., description="Service(s) of origin of the reports")
     report_type: list[str] = Field(..., description="Type(s) of reports")
     users: list[str] = Field(..., description="Reporting user(s)")
+
+
+class ByDayReport(BaseModel):
+    day: date = Field(..., description="Day with aggregate reports")
+    count: int = Field(..., description="Number of reports in the day")
