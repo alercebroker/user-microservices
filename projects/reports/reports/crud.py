@@ -17,8 +17,17 @@ async def read_report(connection: MongoConnection, report_id: str) -> dict | Non
 
 
 async def read_paginated_reports(connection: MongoConnection, q: BasePaginatedQuery) -> dict:
-    total = (await connection.aggregate(Report, q.count_pipeline()).to_list(1))[0]["total"]
-    results = await connection.aggregate(Report, q.pipeline()).to_list(q.limit)
+    try:
+        total, = await connection.aggregate(Report, q.count_pipeline()).to_list(1)
+    except ValueError as err:
+        # Special case: When the collection is empty total will be an empty list
+        if "not enough values to unpack" not in str(err):
+            raise
+        total = 0
+        results = []
+    else:
+        total = total["total"]
+        results = await connection.aggregate(Report, q.pipeline()).to_list(q.limit)
     return {
         "count": total,
         "next": q.page + 1 if q.skip + q.limit < total else None,
@@ -28,7 +37,14 @@ async def read_paginated_reports(connection: MongoConnection, q: BasePaginatedQu
 
 
 async def read_all_reports(connection: MongoConnection, q: BaseQuery) -> list[dict]:
-    total = (await connection.aggregate(Report, q.count_pipeline()).to_list(1))[0]["total"]
+    try:
+        total, = await connection.aggregate(Report, q.count_pipeline()).to_list(1)
+    except ValueError as err:
+        # Special case: When the collection is empty total will be an empty list
+        if "not enough values to unpack" not in str(err):
+            raise
+        return []
+    total = total["total"]
     return await connection.aggregate(Report, q.pipeline()).to_list(total)
 
 
