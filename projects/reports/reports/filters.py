@@ -85,7 +85,7 @@ class QueryByObject(BaseQuery):
         return {"object": "$_id"}
 
     def _filter(self) -> list[dict]:
-        return [{"$match": self.__query()}, {"$match": self._group()}, {"$set": self._set()}]
+        return [{"$match": self.__query()}, {"$group": self._group()}, {"$set": self._set()}]
 
 
 @dataclass
