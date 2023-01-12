@@ -11,7 +11,7 @@ def now_utc():
 
 class BaseModel(PydanticBaseModel):
     @classmethod
-    def get_fields(cls, alias=True):
+    def get_fields(cls, alias: bool = True) -> tuple:
         return tuple(cls.schema(alias).get("properties"))
 
 
