@@ -4,7 +4,7 @@ from fastapi import FastAPI, Body, Depends, HTTPException
 from . import crud
 from .database import connection
 from .filters import QueryByReport, QueryByObject, QueryByDay
-from .models import Report, InsertReport, PaginatedReports, PaginatedReportsByObject, PaginatedReportsByDay
+from .models import Report, InsertReport, ReportByDay, PaginatedReports, PaginatedReportsByObject
 
 
 app = FastAPI()
@@ -20,31 +20,31 @@ async def shutdown():
     await connection.close()
 
 
-@app.get("/", response_model=PaginatedReports, response_description="Report list")
+@app.get("/", response_model=PaginatedReports)
 async def get_report_list(q: QueryByReport = Depends()):
     """Query all reports"""
     return await crud.read_paginated_reports(connection, q)
 
 
-@app.get("/by_object", response_model=PaginatedReportsByObject, response_description="Report list grouped by object")
+@app.get("/by_object", response_model=PaginatedReportsByObject)
 async def get_report_list_by_object(q: QueryByObject = Depends()):
     """Query reports by reported object"""
     return await crud.read_paginated_reports(connection, q)
 
 
-@app.get("/count_by_day", response_model=PaginatedReportsByDay, response_description="Count of reports by day")
+@app.get("/count_by_day", response_model=list[ReportByDay])
 async def count_reports_by_day(q: QueryByDay = Depends()):
     """Query number of reports by day"""
-    return await crud.read_paginated_reports(connection, q)
+    return await crud.read_all_reports(connection, q)
 
 
-@app.post("/", response_model=Report, response_description="Created report", status_code=201)
+@app.post("/", response_model=Report, status_code=201)
 async def create_new_report(report: InsertReport = Body(...)):
     """Insert a new report in database. Date, ID and owner are set automatically"""
     return await crud.create_report(connection, report)
 
 
-@app.get("/{report_id}", response_model=Report, response_description="Requested report")
+@app.get("/{report_id}", response_model=Report)
 async def get_single_report(report_id: str):
     """Retrieve single report based on its ID"""
     report = await crud.read_report(connection, report_id)
@@ -53,7 +53,7 @@ async def get_single_report(report_id: str):
     return report
 
 
-@app.put("/{report_id}", response_model=Report, response_description="Report updated")
+@app.put("/{report_id}", response_model=Report)
 async def update_existing_report(report_id: str, report: InsertReport = Body(...)):
     """Updates an existing report based on its ID"""
     report = await crud.update_report(connection, report_id, report)
@@ -62,7 +62,7 @@ async def update_existing_report(report_id: str, report: InsertReport = Body(...
     return report
 
 
-@app.delete("/{report_id}", response_description="Report deleted", status_code=204)
+@app.delete("/{report_id}", status_code=204)
 async def delete_report(report_id: str):
     """Deletes existing report based on its ID"""
     deleted = await crud.delete_report(connection, report_id)

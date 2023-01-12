@@ -2,7 +2,7 @@
 from db_handler.connection import MongoConnection
 from fastapi import encoders
 
-from .filters import BaseQuery
+from .filters import BaseQuery, BasePaginatedQuery
 from .models import Report, InsertReport
 
 
@@ -16,15 +16,20 @@ async def read_report(connection: MongoConnection, report_id: str) -> dict | Non
     return await connection.find_one(Report, {"_id": report_id})
 
 
-async def read_paginated_reports(connection: MongoConnection, q: BaseQuery) -> dict:
-    total, = await connection.aggregate(Report, q.pipeline(paginate=False, count=True)).to_list(1)
-    results = await connection.aggregate(Report, q.pipeline(paginate=True, count=False)).to_list(q.limit())
+async def read_paginated_reports(connection: MongoConnection, q: BasePaginatedQuery) -> dict:
+    total = (await connection.aggregate(Report, q.count_pipeline()).to_list(1))[0]["total"]
+    results = await connection.aggregate(Report, q.pipeline()).to_list(q.limit)
     return {
-        "count": total["total"],
-        "next": q.page + 1 if q.skip() + q.limit() < total["total"] else None,
+        "count": total,
+        "next": q.page + 1 if q.skip + q.limit < total else None,
         "previous": q.page - 1 if q.page > 1 else None,
         "results": results
     }
+
+
+async def read_all_reports(connection: MongoConnection, q: BaseQuery) -> list[dict]:
+    total = (await connection.aggregate(Report, q.count_pipeline()).to_list(1))[0]["total"]
+    return await connection.aggregate(Report, q.pipeline()).to_list(total)
 
 
 async def update_report(connection: MongoConnection, report_id: str, report: InsertReport) -> dict | None:
