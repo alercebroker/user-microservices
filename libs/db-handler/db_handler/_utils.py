@@ -30,28 +30,31 @@ class PyObjectId(ObjectId):
 
 class MongoModelMetaclass(main.ModelMetaclass):
     """Metaclass for MongoDB models"""
-    _CLONE_NAMESPACE = {"__annotations__": {}, "__module__": "pydantic.main"}
-    collections = {}
+    __CLONE_NAMESPACE = {"__annotations__": {}, "__module__": "pydantic.main"}
+    __models = []
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
 
         try:
-            collection = cls.__tablename__
+            name = cls.__tablename__
         except AttributeError:
             return cls
 
-        if collection in mcs.collections:
-            if namespace == mcs._CLONE_NAMESPACE:
+        if any(name == model.__tablename__ for model in mcs.__models):
+            if namespace == mcs.__CLONE_NAMESPACE:
                 # FastAPI creates clones of the models for the endpoints
                 # Every time a clone is creates, this __new__ runs
-                # The namespace is NOT copied and is unique for the clones
+                # The namespace is NOT copied and the above can identify a clone
                 return cls
-            raise ValueError(f"Duplicate collection name: {collection}")
+            raise ValueError(f"Duplicate collection name: {name}")
 
-        mcs.collections[collection] = getattr(cls, "__indexes__", None)
-
+        mcs.__models.append(cls)
         return cls
+
+    @property
+    def models(mcs) -> tuple:
+        return tuple(mcs.__models)
 
 
 class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
