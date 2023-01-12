@@ -1,3 +1,4 @@
+"""API for interacting with reports"""
 from fastapi import FastAPI, Body, Depends, HTTPException
 
 from . import crud
@@ -21,21 +22,25 @@ async def shutdown():
 
 @app.get("/", response_model=PaginatedReports, response_description="Report list")
 async def get_report_list(q: QueryByReport = Depends()):
+    """Query all reports"""
     return await crud.read_paginated_reports(connection, q)
 
 
 @app.get("/by_object", response_model=PaginatedReportsByObject, response_description="Report list grouped by object")
 async def get_report_list_by_object(q: QueryByObject = Depends()):
+    """Query reports by reported object"""
     return await crud.read_paginated_reports(connection, q)
 
 
 @app.get("/count_by_day", response_model=PaginatedReportsByDay, response_description="Count of reports by day")
 async def count_reports_by_day(q: QueryByDay = Depends()):
+    """Query number of reports by day"""
     return await crud.read_paginated_reports(connection, q)
 
 
 @app.post("/", response_model=Report, response_description="Created report", status_code=201)
 async def create_new_report(report: InsertReport = Body(...)):
+    """Insert a new report in database. Date, ID and owner are set automatically"""
     return await crud.create_report(connection, report)
 
 

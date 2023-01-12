@@ -1,3 +1,4 @@
+"""CRUD (create, read, update, delete) functions for reports API"""
 from db_handler.connection import MongoConnection
 from fastapi import encoders
 
@@ -17,7 +18,7 @@ async def read_report(connection: MongoConnection, report_id: str) -> dict | Non
 
 async def read_paginated_reports(connection: MongoConnection, q: BaseQuery) -> dict:
     total, = await connection.aggregate(Report, q.pipeline(paginate=False, count=True)).to_list(1)
-    results = await connection.aggregate(Report, q.pipeline(paginate=True, count=False)).to_list(q.page_size)
+    results = await connection.aggregate(Report, q.pipeline(paginate=True, count=False)).to_list(q.limit())
     return {
         "count": total["total"],
         "next": q.page + 1 if q.skip() + q.limit() < total["total"] else None,

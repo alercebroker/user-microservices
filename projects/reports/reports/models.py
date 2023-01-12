@@ -5,17 +5,27 @@ from db_handler.models import BaseModelWithId
 from pydantic import BaseModel as PydanticBaseModel, Field
 
 
-def now_utc():
+def now_utc() -> datetime:
+    """Return current time at UTC"""
     return datetime.now(timezone.utc)
 
 
 class BaseModel(PydanticBaseModel):
     @classmethod
-    def get_fields(cls, alias: bool = True) -> tuple:
+    def get_fields(cls, alias: bool = True) -> tuple[str]:
+        """Get all fields in the model.
+
+        Args:
+            alias (bool): Include fields by alias (if given) rather than name
+
+        Returns:
+            tuple[str]: Field names
+        """
         return tuple(cls.schema(alias).get("properties"))
 
 
 class InsertReport(BaseModel):
+    """Schema for report creation"""
     object: str = Field(..., description="Reported object ID")
     solved: bool = Field(..., description="Whether the report has been solved")
     source: str = Field(..., description="Service of origin of the report")
@@ -25,18 +35,21 @@ class InsertReport(BaseModel):
 
 
 class Report(InsertReport, BaseModelWithId):
+    """Schema for individual reports"""
     __tablename__: ClassVar[str] = "reports"
 
     date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
 
 
 class PaginatedModel(BaseModel):
+    """Basic schema for paginated results"""
     count: int = Field(..., description="Total number of results matching query")
     next: int | None = Field(..., description="Next page number (null if no next page)")
     previous: int | None = Field(..., description="Previous page number (null if no previous page)")
 
 
 class PaginatedReports(PaginatedModel):
+    """Schema for paginated reports"""
     results: list[Report] = Field(..., description="List of reports matching query")
 
     class Config(BaseModelWithId.Config):
@@ -44,6 +57,7 @@ class PaginatedReports(PaginatedModel):
 
 
 class ReportByObject(BaseModel):
+    """Schema for reports grouped by object"""
     object: str = Field(..., description="Reported object ID")
     first_date: datetime = Field(..., description="Date of first report")
     last_date: datetime = Field(..., description="Date of last report")
@@ -54,10 +68,12 @@ class ReportByObject(BaseModel):
 
 
 class PaginatedReportsByObject(PaginatedModel):
+    """Schema for paginated reports grouped by object"""
     results: list[ReportByObject] = Field(..., description="List of objects matching query")
 
 
 class ReportByDay(BaseModel):
+    """Schema for number of reports per day"""
     day: date = Field(..., description="Day with aggregate reports")
     count: int = Field(..., description="Number of reports in the day")
 
