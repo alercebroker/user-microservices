@@ -76,7 +76,3 @@ class ReportByDay(BaseModel):
     """Schema for number of reports per day"""
     day: date = Field(..., description="Day with aggregate reports")
     count: int = Field(..., description="Number of reports in the day")
-
-
-class PaginatedReportsByDay(PaginatedModel):
-    results: list[ReportByDay] = Field(..., description="List of days matching query")
