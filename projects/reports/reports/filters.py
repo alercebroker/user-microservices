@@ -2,9 +2,23 @@ from datetime import datetime
 from typing import Literal, Pattern, NamedTuple, ClassVar
 
 from fastapi import Query
+from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 from .models import Report, ReportByObject, ReportByDay
+
+
+def get_fields(model: type[BaseModel], alias: bool = True) -> tuple[str]:
+    """Get all fields in the model.
+
+    Args:
+        model (type[BaseModel]): Model to search for the fields
+        alias (bool): Include fields by alias (if given) rather than name
+
+    Returns:
+        tuple[str]: Field names
+    """
+    return tuple(model.schema(alias).get("properties"))
 
 
 class QueryRecipe(NamedTuple):
@@ -117,13 +131,13 @@ class BasePaginatedQuery(BaseQuery):
 @dataclass
 class QueryByReport(BasePaginatedQuery):
     """Queries that will return individual reports, directly as they come from the database."""
-    order_by: Literal[Report.get_fields()] = Query("date", description="Field to sort by")
+    order_by: Literal[get_fields(Report)] = Query("date", description="Field to sort by")
 
 
 @dataclass
 class QueryByObject(BasePaginatedQuery):
     """Queries that will return reports grouped by object."""
-    order_by: Literal[ReportByObject.get_fields()] = Query("last_date", description="Field to sort by")
+    order_by: Literal[get_fields(ReportByObject)] = Query("last_date", description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
         group = {
@@ -141,7 +155,7 @@ class QueryByObject(BasePaginatedQuery):
 @dataclass
 class QueryByDay(BaseQuery):
     """Queries that return number of reports per day."""
-    order_by: Literal[ReportByDay.get_fields()] = Query("day", description="Field to sort by")
+    order_by: Literal[get_fields(ReportByDay)] = Query("day", description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
         group = {

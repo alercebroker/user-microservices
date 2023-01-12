@@ -1,31 +1,23 @@
 from datetime import datetime
-from typing import ClassVar
 
-from bson import ObjectId
-from pydantic import BaseModel, Field
+from pymongo import IndexModel
+from pydantic import Field
 
-
-class PyObjectId(ObjectId):
-    """Class that allows for ObjectId to be use in pydantic models as string"""
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError(f"Not a valid ObjectID: {v}")
-        return ObjectId(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+from ._utils import BaseModelWithId, now_utc
 
 
-class BaseModelWithId(BaseModel):
-    __tablename__: ClassVar[str]
+class Report(BaseModelWithId):
+    """Schema for individual reports"""
+    __tablename__ = "reports"
+    __indexes__ = [
+        IndexModel([("owner", 1), ("object", 1), ("report_type", 1)], unique=True),
+        IndexModel([("date", -1)])
+    ]
 
-    id: PyObjectId = Field(default_factory=ObjectId, description="Unique identifier in DB", alias="_id")
-
-    class Config:
-        json_encoders = {ObjectId: str, datetime: lambda x: x.isoformat()}
+    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
+    object: str = Field(..., description="Reported object ID")
+    solved: bool = Field(..., description="Whether the report has been solved")
+    source: str = Field(..., description="Service of origin of the report")
+    observation: str = Field(..., description="Class assigned to the object")
+    report_type: str = Field(..., description="Type of report")
+    owner: str = Field(..., description="Report owner")

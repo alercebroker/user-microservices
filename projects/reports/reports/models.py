@@ -1,27 +1,7 @@
-from datetime import date, datetime, timezone
-from typing import ClassVar
+from datetime import date, datetime
 
-from db_handler.models import BaseModelWithId
-from pydantic import BaseModel as PydanticBaseModel, Field
-
-
-def now_utc() -> datetime:
-    """Return current time at UTC"""
-    return datetime.now(timezone.utc)
-
-
-class BaseModel(PydanticBaseModel):
-    @classmethod
-    def get_fields(cls, alias: bool = True) -> tuple[str]:
-        """Get all fields in the model.
-
-        Args:
-            alias (bool): Include fields by alias (if given) rather than name
-
-        Returns:
-            tuple[str]: Field names
-        """
-        return tuple(cls.schema(alias).get("properties"))
+from db_handler.models import Report
+from pydantic import BaseModel, Field
 
 
 class InsertReport(BaseModel):
@@ -32,13 +12,6 @@ class InsertReport(BaseModel):
     observation: str = Field(..., description="Class assigned to the object")
     report_type: str = Field(..., description="Type of report")
     owner: str = Field(..., description="Report owner")
-
-
-class Report(InsertReport, BaseModelWithId):
-    """Schema for individual reports"""
-    __tablename__: ClassVar[str] = "reports"
-
-    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
 
 
 class PaginatedModel(BaseModel):
@@ -52,7 +25,7 @@ class PaginatedReports(PaginatedModel):
     """Schema for paginated reports"""
     results: list[Report] = Field(..., description="List of reports matching query")
 
-    class Config(BaseModelWithId.Config):
+    class Config(Report.Config):
         """This class is necessary to parse ObjectID fields nested in results"""
 
 
