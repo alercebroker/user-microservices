@@ -3,7 +3,7 @@ from datetime import datetime
 from pymongo import IndexModel
 from pydantic import Field
 
-from ._utils import BaseModelWithId, now_utc
+from .utils import BaseModelWithId, now_utc
 
 
 class Report(BaseModelWithId):

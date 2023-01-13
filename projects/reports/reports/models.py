@@ -1,17 +1,22 @@
 from datetime import date, datetime
 
-from db_handler.models import Report
+from db_handler.models import Report as ReportDB
+from db_handler.utils import SchemaMetaclass
 from pydantic import BaseModel, Field
 
 
-class InsertReport(BaseModel):
-    """Schema for report creation"""
-    object: str = Field(..., description="Reported object ID")
-    solved: bool = Field(..., description="Whether the report has been solved")
-    source: str = Field(..., description="Service of origin of the report")
-    observation: str = Field(..., description="Class assigned to the object")
-    report_type: str = Field(..., description="Type of report")
-    owner: str = Field(..., description="Report owner")
+class Report(ReportDB, metaclass=SchemaMetaclass):
+    """Schema for individual reports"""
+
+
+class ReportInsert(Report):
+    """Schema for report insertion"""
+    __exclude__ = {"id", "date"}
+
+
+class ReportUpdate(ReportInsert):
+    """Schema for report updating"""
+    __all_optional__ = True
 
 
 class PaginatedModel(BaseModel):

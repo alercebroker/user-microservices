@@ -3,22 +3,30 @@ from db_handler.connection import MongoConnection
 from fastapi import encoders
 
 from .filters import BaseQuery, BasePaginatedQuery
-from .models import Report, InsertReport
+from .models import ReportDB, ReportInsert
 
 
-async def create_report(connection: MongoConnection, report: InsertReport) -> dict | None:
-    report = Report(**report.dict())
-    insert = await connection.insert_one(Report, encoders.jsonable_encoder(report))
-    return await connection.find_one(Report, {"_id": insert.inserted_id})
+class DocumentNotFound(ValueError):
+    def __init__(self, identifier):
+        super().__init__(f"Document not found. ID: {identifier}")
 
 
-async def read_report(connection: MongoConnection, report_id: str) -> dict | None:
-    return await connection.find_one(Report, {"_id": report_id})
+async def create_report(connection: MongoConnection, report: ReportInsert) -> dict:
+    report = ReportDB(**report.dict())
+    insert = await connection.insert_one(ReportDB, encoders.jsonable_encoder(report))
+    return await connection.find_one(ReportDB, {"_id": insert.inserted_id})
+
+
+async def read_report(connection: MongoConnection, report_id: str) -> dict:
+    report = await connection.find_one(ReportDB, {"_id": report_id})
+    if report is None:
+        raise DocumentNotFound(report_id)
+    return report
 
 
 async def read_paginated_reports(connection: MongoConnection, q: BasePaginatedQuery) -> dict:
     try:
-        total, = await connection.aggregate(Report, q.count_pipeline()).to_list(1)
+        total, = await connection.aggregate(ReportDB, q.count_pipeline()).to_list(1)
     except ValueError as err:
         # Special case: When the collection is empty total will be an empty list
         if "not enough values to unpack" not in str(err):
@@ -27,7 +35,7 @@ async def read_paginated_reports(connection: MongoConnection, q: BasePaginatedQu
         results = []
     else:
         total = total["total"]
-        results = await connection.aggregate(Report, q.pipeline()).to_list(q.limit)
+        results = await connection.aggregate(ReportDB, q.pipeline()).to_list(q.limit)
     return {
         "count": total,
         "next": q.page + 1 if q.skip + q.limit < total else None,
@@ -37,22 +45,18 @@ async def read_paginated_reports(connection: MongoConnection, q: BasePaginatedQu
 
 
 async def read_all_reports(connection: MongoConnection, q: BaseQuery) -> list[dict]:
-    try:
-        total, = await connection.aggregate(Report, q.count_pipeline()).to_list(1)
-    except ValueError as err:
-        # Special case: When the collection is empty total will be an empty list
-        if "not enough values to unpack" not in str(err):
-            raise
-        return []
-    total = total["total"]
-    return await connection.aggregate(Report, q.pipeline()).to_list(total)
+    return [_ async for _ in connection.aggregate(ReportDB, q.pipeline())]
 
 
-async def update_report(connection: MongoConnection, report_id: str, report: InsertReport) -> dict | None:
-    await connection.update_one(Report, {"_id": report_id}, {"$set": report.dict()})
-    return await connection.find_one(Report, {"_id": report_id})
+async def update_report(connection: MongoConnection, report_id: str, report: ReportInsert) -> dict:
+    await connection.update_one(ReportDB, {"_id": report_id}, {"$set": report.dict(exclude_none=True)})
+    report = await connection.find_one(ReportDB, {"_id": report_id})
+    if report is None:
+        raise DocumentNotFound(report_id)
+    return report
 
 
-async def delete_report(connection: MongoConnection, report_id: str) -> int:
-    delete = await connection.delete_one(Report, {"_id": report_id})
-    return delete.deleted_count
+async def delete_report(connection: MongoConnection, report_id: str):
+    delete = await connection.delete_one(ReportDB, {"_id": report_id})
+    if delete.deleted_count == 0:
+        raise DocumentNotFound(report_id)

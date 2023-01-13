@@ -30,31 +30,50 @@ class PyObjectId(ObjectId):
 
 class MongoModelMetaclass(main.ModelMetaclass):
     """Metaclass for MongoDB models"""
-    __CLONE_NAMESPACE = {"__annotations__": {}, "__module__": "pydantic.main"}
     __models = []
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
 
         try:
-            name = cls.__tablename__
+            tablename = cls.__tablename__
         except AttributeError:
             return cls
 
-        if any(name == model.__tablename__ for model in mcs.__models):
-            if namespace == mcs.__CLONE_NAMESPACE:
-                # FastAPI creates clones of the models for the endpoints
-                # Every time a clone is creates, this __new__ runs
-                # The namespace is NOT copied and the above can identify a clone
+        if any(tablename == model.__tablename__ for model in mcs.__models):
+            if mcs.__is_schema__:
+                # Prevents schemas from adding tables
                 return cls
-            raise ValueError(f"Duplicate collection name: {name}")
+            raise ValueError(f"Duplicate collection name: {tablename}")
 
         mcs.__models.append(cls)
         return cls
 
     @property
-    def models(mcs) -> tuple:
-        return tuple(mcs.__models)
+    def models(self) -> tuple:
+        return tuple(self.__models)
+
+
+class SchemaMetaclass(MongoModelMetaclass):
+    """Metaclass for creating schemas based on Mongo models"""
+    __is_schema__ = True
+
+    def __new__(mcs, name, bases, namespace, **kwargs):
+        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
+
+        if not hasattr(cls, "__exclude__"):
+            cls.__exclude__ = set()
+        if not hasattr(cls, "__all_optional__"):
+            cls.__all_optional__ = False
+
+        cls.__fields__ = {k: v for k, v in cls.__fields__.items() if k not in cls.__exclude__}
+        if not cls.__all_optional__:
+            return cls
+        for field in cls.__fields__.values():
+            field.required = False
+            field.default_factory = None
+            field.default = None
+        return cls
 
 
 class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
