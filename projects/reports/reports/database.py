@@ -8,8 +8,9 @@ from .models import ReportInsert
 from .settings import MongoSettings
 
 
-settings = MongoSettings()
-connection = MongoConnection(settings.dict())
+def get_connection():
+    settings = MongoSettings()
+    return MongoConnection(settings.dict())
 
 
 async def create_report(conn: MongoConnection, report: ReportInsert) -> dict:

@@ -9,7 +9,7 @@ from .models import Report, ReportInsert, ReportUpdate, ReportByDay, PaginatedRe
 
 
 app = FastAPI()
-connection = database.connection
+connection = database.get_connection()
 
 
 @app.on_event("startup")
