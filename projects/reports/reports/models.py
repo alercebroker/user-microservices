@@ -40,8 +40,8 @@ class PaginatedReports(PaginatedModel):
 class ReportByObject(BaseModel):
     """Schema for reports grouped by object"""
     object: str = Field(..., description="Reported object ID")
-    first_date: datetime = Field(..., description="Date of first report")
-    last_date: datetime = Field(..., description="Date of last report")
+    first_date: datetime = Field(..., description="Date and time of first report (UTC)")
+    last_date: datetime = Field(..., description="Date and time of last report (UTC)")
     count: int = Field(..., description="Number of reports")
     source: list[str] = Field(..., description="Service(s) of origin of the reports")
     report_type: list[str] = Field(..., description="Type(s) of reports")
@@ -55,5 +55,5 @@ class PaginatedReportsByObject(PaginatedModel):
 
 class ReportByDay(BaseModel):
     """Schema for number of reports per day"""
-    day: date = Field(..., description="Day with aggregate reports")
+    day: date = Field(..., description="Day (start and end at UTC)")
     count: int = Field(..., description="Number of reports in the day")

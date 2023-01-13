@@ -14,10 +14,10 @@ class Report(BaseModelWithId):
         IndexModel([("date", -1)])
     ]
 
-    date: datetime = Field(default_factory=datetime.utcnow, description="Date the report was generated")
+    date: datetime = Field(default_factory=datetime.utcnow, description="Date and time of creation (UTC)")
     object: str = Field(..., description="Reported object ID")
-    solved: bool = Field(..., description="Whether the report has been solved")
+    solved: bool = Field(..., description="Report status")
     source: str = Field(..., description="Service of origin of the report")
     observation: str = Field(..., description="Class assigned to the object")
     report_type: str = Field(..., description="Type of report")
-    owner: str = Field(..., description="Report owner")
+    owner: str = Field(..., description="User who created the report")
