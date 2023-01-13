@@ -1,20 +1,23 @@
 from datetime import date, datetime
 
-from db_handler.models import Report as ReportDB
-from db_handler.utils import SchemaMetaclass
+from db_handler.models import Report
+from db_handler.utils import SchemaMetaclass, ObjectId
 from pydantic import BaseModel, Field
 
 
-class Report(ReportDB, metaclass=SchemaMetaclass):
+class ReportOut(Report, metaclass=SchemaMetaclass):
     """Schema for individual reports"""
 
+    class Config:
+        json_encoders = {ObjectId: str}
 
-class ReportInsert(Report):
+
+class ReportIn(ReportOut):
     """Schema for report insertion"""
     __exclude__ = {"id", "date"}
 
 
-class ReportUpdate(ReportInsert):
+class ReportUpdate(ReportIn):
     """Schema for report updating"""
     __all_optional__ = True
 
@@ -28,9 +31,9 @@ class PaginatedModel(BaseModel):
 
 class PaginatedReports(PaginatedModel):
     """Schema for paginated reports"""
-    results: list[Report] = Field(..., description="List of reports matching query")
+    results: list[ReportOut] = Field(..., description="List of reports matching query")
 
-    class Config(Report.Config):
+    class Config(ReportOut.Config):
         """This class is necessary to parse ObjectID fields nested in results"""
 
 

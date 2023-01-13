@@ -14,7 +14,7 @@ class Report(BaseModelWithId):
         IndexModel([("date", -1)])
     ]
 
-    date: datetime = Field(default_factory=now_utc, description="Date the report was generated")
+    date: datetime = Field(default_factory=datetime.utcnow, description="Date the report was generated")
     object: str = Field(..., description="Reported object ID")
     solved: bool = Field(..., description="Whether the report has been solved")
     source: str = Field(..., description="Service of origin of the report")

@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from . import database
 from .filters import QueryByReport, QueryByObject, QueryByDay
-from .models import Report, ReportInsert, ReportUpdate, ReportByDay, PaginatedReports, PaginatedReportsByObject
+from .models import ReportOut, ReportIn, ReportUpdate, ReportByDay, PaginatedReports, PaginatedReportsByObject
 
 
 app = FastAPI()
@@ -37,7 +37,7 @@ async def document_not_found(request, exc):
 @app.get("/", response_model=PaginatedReports)
 async def get_report_list(q: QueryByReport = Depends()):
     """Query all reports"""
-    return database.read_paginated_reports(connection, q)
+    return await database.read_paginated_reports(connection, q)
 
 
 @app.get("/by_object", response_model=PaginatedReportsByObject)
@@ -52,26 +52,26 @@ async def count_reports_by_day(q: QueryByDay = Depends()):
     return await database.read_all_reports(connection, q)
 
 
-@app.post("/", response_model=Report, status_code=201)
-async def create_new_report(report: ReportInsert = Body(...)):
+@app.post("/", response_model=ReportOut, status_code=201)
+async def create_new_report(report: ReportIn = Body(...)):
     """Insert a new report in database. Date, ID and owner are set automatically"""
     return await database.create_report(connection, report)
 
 
-@app.get("/{report_id}", response_model=Report)
+@app.get("/{report_id}", response_model=ReportOut)
 async def get_single_report(report_id: str):
     """Retrieve single report based on its ID"""
     return await database.read_report(connection, report_id)
 
 
-@app.patch("/{report_id}", response_model=Report)
+@app.patch("/{report_id}", response_model=ReportOut)
 async def update_existing_report(report_id: str, report: ReportUpdate = Body(...)):
     """Updates an existing report based on its ID"""
     return await database.update_report(connection, report_id, report)
 
 
-@app.put("/{report_id}", response_model=Report)
-async def replace_existing_report(report_id: str, report: ReportInsert = Body(...)):
+@app.put("/{report_id}", response_model=ReportOut)
+async def replace_existing_report(report_id: str, report: ReportIn = Body(...)):
     """Replaces an existing report based on its ID"""
     return await database.update_report(connection, report_id, report)
 

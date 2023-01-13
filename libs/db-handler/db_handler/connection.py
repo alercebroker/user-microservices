@@ -67,6 +67,9 @@ class MongoConnection:
             if cls.__indexes__:
                 await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
 
+    async def drop_db(self):
+        await self._client.drop_database(self._config.db)
+
     async def find_one(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
         return await self.db[model.__tablename__].find_one(*args, **kwargs)
 

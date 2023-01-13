@@ -5,7 +5,7 @@ from fastapi import Query
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
-from .models import Report, ReportByObject, ReportByDay
+from .models import ReportOut, ReportByObject, ReportByDay
 
 
 def get_fields(model: type[BaseModel], alias: bool = True) -> tuple[str]:
@@ -131,7 +131,7 @@ class BasePaginatedQuery(BaseQuery):
 @dataclass
 class QueryByReport(BasePaginatedQuery):
     """Queries that will return individual reports, directly as they come from the database."""
-    order_by: Literal[get_fields(Report)] = Query("date", description="Field to sort by")
+    order_by: Literal[get_fields(ReportOut)] = Query("date", description="Field to sort by")
 
 
 @dataclass
@@ -161,7 +161,7 @@ class QueryByDay(BaseQuery):
         group = {
             "_id": {
                 "$dateTrunc": {
-                    "date": {"$toDate": "$date"},
+                    "date": "$date",
                     "unit": "day"
                 }
             },

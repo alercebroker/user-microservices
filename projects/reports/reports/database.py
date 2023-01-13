@@ -1,10 +1,8 @@
 from db_handler.connection import MongoConnection
-from db_handler.models import Report
 from db_handler.utils import DocumentNotFound
-from fastapi import encoders
 
 from .filters import BaseQuery, BasePaginatedQuery
-from .models import ReportInsert
+from .models import Report, ReportIn
 from .settings import MongoSettings
 
 
@@ -13,9 +11,9 @@ def get_connection():
     return MongoConnection(settings.dict())
 
 
-async def create_report(conn: MongoConnection, report: ReportInsert) -> dict:
+async def create_report(conn: MongoConnection, report: ReportIn) -> dict:
     report = Report(**report.dict())
-    insert = await conn.insert_one(Report, encoders.jsonable_encoder(report))
+    insert = await conn.insert_one(Report, report.dict(by_alias=True))
     return await conn.find_one(Report, {"_id": insert.inserted_id})
 
 
@@ -50,7 +48,7 @@ async def read_all_reports(conn: MongoConnection, q: BaseQuery) -> list[dict]:
     return [_ async for _ in conn.aggregate(Report, q.pipeline())]
 
 
-async def update_report(conn: MongoConnection, report_id: str, report: ReportInsert) -> dict:
+async def update_report(conn: MongoConnection, report_id: str, report: ReportIn) -> dict:
     await conn.update_one(Report, {"_id": report_id}, {"$set": report.dict(exclude_none=True)})
     report = await conn.find_one(Report, {"_id": report_id})
     if report is None:

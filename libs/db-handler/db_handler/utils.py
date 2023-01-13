@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import ClassVar
 
 from bson import ObjectId
@@ -82,11 +81,3 @@ class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
     __indexes__: ClassVar[list[IndexModel]]
 
     id: PyObjectId = Field(default_factory=ObjectId, description="Unique identifier in DB", alias="_id")
-
-    class Config:
-        json_encoders = {ObjectId: str, datetime: lambda x: x.isoformat()}
-
-
-def now_utc() -> datetime:
-    """Return current time at UTC"""
-    return datetime.now(timezone.utc)
