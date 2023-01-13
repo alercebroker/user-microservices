@@ -7,7 +7,7 @@ from .utils import BaseModelWithId
 
 
 class Report(BaseModelWithId):
-    """Schema for individual reports"""
+    """Full mongo model for reports"""
     __tablename__ = "reports"
     __indexes__ = [
         IndexModel([("owner", 1), ("object", 1), ("report_type", 1)], unique=True),

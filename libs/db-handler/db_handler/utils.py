@@ -24,7 +24,7 @@ class DocumentNotFound(ValueError):
 
 
 class PyObjectId(ObjectId):
-    """Class that allows for ObjectId to be use in pydantic models as string"""
+    """Custom type to allow for bson's ObjectId to be declared as types in pydantic models"""
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -41,7 +41,22 @@ class PyObjectId(ObjectId):
 
 
 class MongoModelMetaclass(main.ModelMetaclass):
-    """Metaclass for MongoDB models"""
+    """Metaclass for MongoDB models
+
+    This essentially allows for the storage of models intended to represent collections
+    and access them as a property of the metaclass (`models`).
+
+    This is mostly relevant only when initializing the database within the connection.
+
+    The model is expected to have `__tablename__` as a class property, defining the
+    name of the associated collection, and (optionally) `__indexes__`. The latter should
+    be a list of `IndexModel` from pymongo and is used to initialize the indexes.
+
+    If a collection name already exists, an error will be raised.
+
+    If the model does not have `__tablename__`, it will be quietly ignored and a standard
+    model will be added, without including it in `models`.
+    """
     __models = []
 
     def __new__(mcs, name, bases, namespace, **kwargs):
@@ -58,6 +73,8 @@ class MongoModelMetaclass(main.ModelMetaclass):
                 return cls
             raise ValueError(f"Duplicate collection name: {tablename}")
 
+        if not hasattr(cls, "__indexes__"):
+            cls.__indexes__ = []
         mcs.__models.append(cls)
         return cls
 
@@ -67,7 +84,23 @@ class MongoModelMetaclass(main.ModelMetaclass):
 
 
 class SchemaMetaclass(MongoModelMetaclass):
-    """Metaclass for creating schemas based on Mongo models"""
+    """Metaclass for creating schemas based on Mongo models
+
+    This allows for inheriting from classes of type `MongoModelMetaclass` and
+    using them as templates for schemas. Standard inheritance is possible, but it
+    is also possible to remove fields from the parent. Field names defined in
+    `__exclude__` (normally a set, but any iterable works) will be removed in the
+    child class. **NOTE:** be mindful of validators when removing fields, since
+    validators of removed fields or that depend on them will raise errors.
+
+    Additionally, it is possible to use `__all_optional__` to force all fields to
+    be optional, even those defined within the class proper. This includes removing
+    any existing default factory and allowing the field to accept `None`. This is
+    typically useful for generating PATCH schemas.
+
+    The metaclass attribute `__is_schema__` is used to prevent `MongoModelMetaclass`
+    from trying to add the schema to the models.
+    """
     __is_schema__ = True
 
     def __new__(mcs, name, bases, namespace, **kwargs):
@@ -89,7 +122,13 @@ class SchemaMetaclass(MongoModelMetaclass):
 
 
 class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
-    """Class that automatically handles `_id` from MongoDB"""
+    """Class that automatically handles the default `_id` from MongoDB
+
+    If using your own value for `_id` it is recommended to still inherit from this class
+    and simply override with a different type and default or default factory, given that the
+    relevant metaclass for creating collections is already introduced here. Do not forget
+    to set the alias to `_id` if overriding the field.
+    """
     __tablename__: ClassVar[str]
     __indexes__: ClassVar[list[IndexModel]]
 
