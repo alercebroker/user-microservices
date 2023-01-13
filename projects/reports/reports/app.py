@@ -49,25 +49,25 @@ async def document_not_found(request, exc):
 
 @app.get("/", response_model=PaginatedReports)
 async def get_report_list(q: QueryByReport = Depends()):
-    """Query all reports"""
+    """Query reports"""
     return await database.read_paginated_reports(connection, q)
 
 
 @app.get("/by_object", response_model=PaginatedReportsByObject)
 async def get_report_list_by_object(q: QueryByObject = Depends()):
-    """Query reports by reported object"""
+    """Query reports grouped by object"""
     return await database.read_paginated_reports(connection, q)
 
 
 @app.get("/count_by_day", response_model=list[ReportByDay])
 async def count_reports_by_day(q: QueryByDay = Depends()):
-    """Query number of reports by day"""
+    """Query number of reports per day"""
     return await database.read_all_reports(connection, q)
 
 
 @app.post("/", response_model=ReportOut, status_code=201)
 async def create_new_report(report: ReportIn = Body(...)):
-    """Insert a new report in database. Date, ID and owner are set automatically"""
+    """Insert a new report in database. Date, ID and owner are set internally"""
     return await database.create_report(connection, report)
 
 
@@ -79,13 +79,13 @@ async def get_single_report(report_id: str):
 
 @app.patch("/{report_id}", response_model=ReportOut)
 async def update_existing_report(report_id: str, report: ReportUpdate = Body(...)):
-    """Updates an existing report based on its ID"""
+    """Updates one or more fields of an existing report based on its ID"""
     return await database.update_report(connection, report_id, report)
 
 
 @app.put("/{report_id}", response_model=ReportOut)
 async def replace_existing_report(report_id: str, report: ReportIn = Body(...)):
-    """Replaces an existing report based on its ID"""
+    """Updates the full report based on its ID"""
     return await database.update_report(connection, report_id, report)
 
 
