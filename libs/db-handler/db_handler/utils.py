@@ -6,9 +6,9 @@ from pymongo import IndexModel
 from pydantic import BaseModel, Field, main
 
 
-def now_utc() -> datetime:
-    """Return current time at UTC"""
-    return datetime.now(timezone.utc)
+class DocumentNotFound(ValueError):
+    def __init__(self, identifier):
+        super().__init__(f"Document not found. ID: {identifier}")
 
 
 class PyObjectId(ObjectId):
@@ -85,3 +85,8 @@ class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
 
     class Config:
         json_encoders = {ObjectId: str, datetime: lambda x: x.isoformat()}
+
+
+def now_utc() -> datetime:
+    """Return current time at UTC"""
+    return datetime.now(timezone.utc)
