@@ -1,5 +1,5 @@
 from db_handler.connection import MongoConnection
-from db_handler.utils import DocumentNotFound
+from db_handler.utils import DocumentNotFound, ObjectId
 
 from .filters import BaseQuery, BasePaginatedQuery
 from .models import Report, ReportIn
@@ -18,7 +18,7 @@ async def create_report(conn: MongoConnection, report: ReportIn) -> dict:
 
 
 async def read_report(conn: MongoConnection, report_id: str) -> dict:
-    report = await conn.find_one(Report, {"_id": report_id})
+    report = await conn.find_one(Report, {"_id": ObjectId(report_id)})
     if report is None:
         raise DocumentNotFound(report_id)
     return report
@@ -49,14 +49,14 @@ async def read_all_reports(conn: MongoConnection, q: BaseQuery) -> list[dict]:
 
 
 async def update_report(conn: MongoConnection, report_id: str, report: ReportIn) -> dict:
-    await conn.update_one(Report, {"_id": report_id}, {"$set": report.dict(exclude_none=True)})
-    report = await conn.find_one(Report, {"_id": report_id})
+    update = {"$set": report.dict(exclude_none=True)}
+    report = await conn.find_one_and_update(Report, {"_id": ObjectId(report_id)}, update, return_document=True)
     if report is None:
         raise DocumentNotFound(report_id)
     return report
 
 
 async def delete_report(conn: MongoConnection, report_id: str):
-    delete = await conn.delete_one(Report, {"_id": report_id})
-    if delete.deleted_count == 0:
+    report = await conn.find_one_and_delete(Report, {"_id": ObjectId(report_id)})
+    if report is None:
         raise DocumentNotFound(report_id)

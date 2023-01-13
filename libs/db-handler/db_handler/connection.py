@@ -73,6 +73,15 @@ class MongoConnection:
     async def find_one(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
         return await self.db[model.__tablename__].find_one(*args, **kwargs)
 
+    async def find_one_and_delete(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+        return await self.db[model.__tablename__].find_one_and_delete(*args, **kwargs)
+
+    async def find_one_and_replace(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+        return await self.db[model.__tablename__].find_one_and_replace(*args, **kwargs)
+
+    async def find_one_and_update(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+        return await self.db[model.__tablename__].find_one_and_update(*args, **kwargs)
+
     def find(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
         return self.db[model.__tablename__].find(*args, **kwargs)
 

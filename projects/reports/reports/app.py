@@ -8,7 +8,14 @@ from .filters import QueryByReport, QueryByObject, QueryByDay
 from .models import ReportOut, ReportIn, ReportUpdate, ReportByDay, PaginatedReports, PaginatedReportsByObject
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Reports API",
+    description=__doc__,
+    contact={
+        "name": "ALeRCE Broker",
+        "email": "alercebroker@gmail.com",
+        "url": "https://alerce.science"
+    })
 connection = database.get_connection()
 
 
