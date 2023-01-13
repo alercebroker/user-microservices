@@ -1,24 +1,11 @@
 from datetime import datetime
 from typing import Literal, Pattern, NamedTuple, ClassVar
 
+from db_handler.utils import get_fields
 from fastapi import Query
-from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 from .models import ReportOut, ReportByObject, ReportByDay
-
-
-def get_fields(model: type[BaseModel], alias: bool = True) -> tuple[str]:
-    """Get all fields in the model.
-
-    Args:
-        model (type[BaseModel]): Model to search for the fields
-        alias (bool): Include fields by alias (if given) rather than name
-
-    Returns:
-        tuple[str]: Field names
-    """
-    return tuple(model.schema(alias).get("properties"))
 
 
 class QueryRecipe(NamedTuple):

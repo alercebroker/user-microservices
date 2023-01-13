@@ -5,6 +5,19 @@ from pymongo import IndexModel
 from pydantic import BaseModel, Field, main
 
 
+def get_fields(model: type[BaseModel], by_alias: bool = True) -> tuple:
+    """Get all fields in given model.
+
+    Args:
+        model (type[BaseModel]): Model to search for the fields
+        by_alias (bool): Include fields by alias (if given) rather than name
+
+    Returns:
+        tuple[str]: Field names
+    """
+    return tuple(f.alias if by_alias else f.name for f in model.__fields__.values())
+
+
 class DocumentNotFound(ValueError):
     def __init__(self, identifier):
         super().__init__(f"Document not found. ID: {identifier}")
