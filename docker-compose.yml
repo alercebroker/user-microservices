@@ -1,0 +1,14 @@
+version: "3"
+services:
+  reports-api:
+    build:
+      context: .
+      dockerfile: reports/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_HOST=${MONGODB_HOST}
+      - MONGODB_PORT=${MONGODB_PORT}
+      - MONGODB_USERNAME=${MONGODB_USERNAME}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD}
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
