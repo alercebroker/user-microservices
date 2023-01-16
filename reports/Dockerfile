@@ -11,4 +11,4 @@ COPY ./libs /app/libs
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-interaction --no-cache --no-ansi
 
-CMD ["uvicorn", "reports.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "reports.main:app", "--host", "0.0.0.0", "--port", "8000"]
