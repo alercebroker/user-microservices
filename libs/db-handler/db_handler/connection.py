@@ -3,6 +3,7 @@ from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCursor
 from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
+from pydantic import BaseSettings
 
 from .models import BaseModelWithId
 
@@ -44,8 +45,8 @@ class _MongoConfig(UserDict):
 
 
 class MongoConnection:
-    def __init__(self, config: dict):
-        self._config = _MongoConfig(config)
+    def __init__(self, config: BaseSettings):
+        self._config = _MongoConfig(config.dict())
         self._client = None
 
     @property
