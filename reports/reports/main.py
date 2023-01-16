@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pymongo import errors
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 from .database import connection, DocumentNotFound
 from .routes import root
@@ -16,6 +17,9 @@ app = FastAPI(
         "url": "https://alerce.science"
     }
 )
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", metrics)
 
 app.include_router(root)
 

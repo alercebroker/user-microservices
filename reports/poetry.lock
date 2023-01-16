@@ -286,6 +286,21 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
+name = "prometheus-client"
+version = "0.12.0"
+description = "Python client for the Prometheus monitoring system."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "prometheus_client-0.12.0-py2.py3-none-any.whl", hash = "sha256:317453ebabff0a1b02df7f708efbab21e3489e7072b61cb6957230dd004a0af0"},
+    {file = "prometheus_client-0.12.0.tar.gz", hash = "sha256:1b12ba48cee33b9b0b9de64a1047cbd3c5f2d0ab6ebcead7ddda613a750ec3c5"},
+]
+
+[package.extras]
+twisted = ["twisted"]
+
+[[package]]
 name = "pydantic"
 version = "1.10.4"
 description = "Data validation and settings management using python type hints"
@@ -553,6 +568,22 @@ anyio = ">=3.4.0,<5"
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
 
 [[package]]
+name = "starlette-prometheus"
+version = "0.9.0"
+description = "Prometheus integration for Starlette"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "starlette-prometheus-0.9.0.tar.gz", hash = "sha256:a52fb0f1df52b44a7a677a792759337ef0ce0d59ddf3e684a7d6459a93a90e99"},
+    {file = "starlette_prometheus-0.9.0-py3-none-any.whl", hash = "sha256:b4702e4ec67dce508d28551db0e45f12f58411afdb5d1078c92ff74331915381"},
+]
+
+[package.dependencies]
+prometheus_client = ">=0.12,<0.13"
+starlette = ">=0.12.2"
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -760,4 +791,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c67c4e1df004a9895b1894c34cf2dd74a63f4527fdcaecf48789e83f49a8073f"
+content-hash = "7f46f7689ac45bb2e7a8cb9ea1f7fdb23f421255e51a92bc910e593fe9e51b93"
