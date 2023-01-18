@@ -1,40 +1,6 @@
-from datetime import datetime
 from unittest import mock
 
-from fastapi.testclient import TestClient
-
-from reports.main import app
-
-
-client = TestClient(app)
-
-
-mock_report_1 = {
-    "_id": "1",
-    "date": datetime(2023, 1, 1, 0, 0, 0),
-    "object": "object",
-    "solved": False,
-    "source": "source",
-    "observation": "observation",
-    "report_type": "report_type",
-    "owner": "owner"
-}
-
-
-mock_report_2 = {
-    "_id": "2",
-    "date": datetime(2023, 1, 1, 0, 0, 0),
-    "object": "object",
-    "solved": False,
-    "source": "source",
-    "observation": "observation",
-    "report_type": "report_type",
-    "owner": "owner"
-}
-
-
-def _report_as_json(report):
-    return {k: v.isoformat() if isinstance(v, datetime) else v for k, v in report.items()}
+from . import utils
 
 
 @mock.patch('reports.database.get_connection')
@@ -42,8 +8,11 @@ def test_get_report_list_empty(mock_connection):
     cursor_to_list = mock.AsyncMock()
     mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
     cursor_to_list.return_value = []
-    response = client.get("/")
+
+    response = utils.client.get("/")
+
     assert response.status_code == 200
+
     json = response.json()
     assert json["count"] == 0
     assert json["previous"] is None
@@ -53,41 +22,78 @@ def test_get_report_list_empty(mock_connection):
 
 @mock.patch('reports.database.get_connection')
 def test_get_report_list_with_elements(mock_connection):
+    n = 2
+    reports = utils.create_reports(n)
+
     cursor_to_list = mock.AsyncMock()
     mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
-    cursor_to_list.side_effect = [{"total": 2}], [mock_report_1, mock_report_2]
-    response = client.get("/")
+    cursor_to_list.side_effect = [{"total": n}], reports
+
+    response = utils.client.get("/")
     assert response.status_code == 200
+
     json = response.json()
-    assert json["count"] == 2
+    assert json["count"] == n
     assert json["previous"] is None
     assert json["next"] is None
-    assert json["results"] == [_report_as_json(mock_report_1), _report_as_json(mock_report_2)]
+    assert json["results"] == utils.create_jsons(reports)
 
 
 @mock.patch('reports.database.get_connection')
 def test_get_report_list_paginated_with_next(mock_connection):
+    n, size = 6, 2
+    page = 1
+    reports = utils.create_reports(size)
+
     cursor_to_list = mock.AsyncMock()
     mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
-    cursor_to_list.side_effect = [{"total": 2}], [mock_report_1]
-    response = client.get("/", params={"page": 1, "page_size": 1})
+    cursor_to_list.side_effect = [{"total": n}], reports
+
+    response = utils.client.get("/", params={"page": page, "page_size": size})
     assert response.status_code == 200
+
     json = response.json()
-    assert json["count"] == 2
+    assert json["count"] == n
     assert json["previous"] is None
-    assert json["next"] == 2
-    assert json["results"] == [_report_as_json(mock_report_1)]
+    assert json["next"] == page + 1
+    assert json["results"] == utils.create_jsons(reports)
 
 
 @mock.patch('reports.database.get_connection')
 def test_get_report_list_paginated_with_previous(mock_connection):
+    n, size = 6, 2
+    page = n // size + (1 if n % size else 0)
+    reports = utils.create_reports(size)
+
     cursor_to_list = mock.AsyncMock()
     mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
-    cursor_to_list.side_effect = [{"total": 2}], [mock_report_2]
-    response = client.get("/", params={"page": 2, "page_size": 1})
+    cursor_to_list.side_effect = [{"total": n}], reports
+
+    response = utils.client.get("/", params={"page": page, "page_size": size})
     assert response.status_code == 200
+
     json = response.json()
-    assert json["count"] == 2
-    assert json["previous"] == 1
+    assert json["count"] == n
+    assert json["previous"] == page - 1
     assert json["next"] is None
-    assert json["results"] == [_report_as_json(mock_report_2)]
+    assert json["results"] == utils.create_jsons(reports)
+
+
+@mock.patch('reports.database.get_connection')
+def test_get_report_list_paginated_with_previous_and_next(mock_connection):
+    n, size = 6, 2
+    page = n // size - 1 + (1 if n % size else 0)
+    reports = utils.create_reports(size)
+
+    cursor_to_list = mock.AsyncMock()
+    mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
+    cursor_to_list.side_effect = [{"total": n}], reports
+
+    response = utils.client.get("/", params={"page": page, "page_size": size})
+    assert response.status_code == 200
+
+    json = response.json()
+    assert json["count"] == n
+    assert json["previous"] == page - 1
+    assert json["next"] == page + 1
+    assert json["results"] == utils.create_jsons(reports)
