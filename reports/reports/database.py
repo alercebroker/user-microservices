@@ -20,8 +20,7 @@ def get_connection() -> MongoConnection:
 
 async def create_report(report: ReportIn) -> Report:
     report = Report(**report.dict())
-    insert = await get_connection().insert_one(Report, report.dict(by_alias=True))
-    assert str(insert.inserted_id) == str(report.id)
+    await get_connection().insert_one(Report, report.dict(by_alias=True))
     return report
 
 

@@ -11,13 +11,13 @@ client = TestClient(app)
 random.seed(42)
 
 
-def _random_oid():
+def random_oid():
     return ObjectId(''.join(random.choices('01234567890abcdef', k=24)))
 
 
 def report_factory(**kwargs):
     report = {
-        "_id": _random_oid(),
+        "_id": random_oid(),
         "date": datetime.utcnow(),
         "object": "object",
         "solved": False,
@@ -43,7 +43,7 @@ def json_converter(report):
 
 
 def create_reports(n=1):
-    return [report_factory(_id=_random_oid()) for _ in range(n)]
+    return [report_factory(_id=random_oid()) for _ in range(n)]
 
 
 def create_jsons(reports):

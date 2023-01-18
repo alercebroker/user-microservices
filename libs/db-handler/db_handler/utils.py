@@ -132,4 +132,4 @@ class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
     __tablename__: ClassVar[str]
     __indexes__: ClassVar[list[IndexModel]]
 
-    id: PyObjectId = Field(default_factory=ObjectId, description="Unique identifier in DB", alias="_id")
+    id: PyObjectId = Field(default_factory=lambda: PyObjectId(), description="Unique identifier in DB", alias="_id")
