@@ -17,14 +17,21 @@ def test_create_report_ignores_body_id_and_date(mock_connection, mock_report):
     insert_one = mock.AsyncMock()
     insert_one.return_value.inserted_id = fixed_id
     mock_connection.return_value.insert_one = insert_one
-    # Will fail if _id is also present in kwargs (expected so that schema doesn't pass it)
     mock_report.side_effect = lambda **kwargs: Report(_id=PyObjectId(fixed_id), **kwargs)
 
     response = utils.client.post("/", content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 201
 
-    json_resp = response.json()
-    assert json_resp["date"] != utils.json_converter(report)["date"]
+    json_response = response.json()
+    json_report = utils.json_converter(report)
+    assert json_response["_id"] != json_report["_id"]
+    assert json_response["date"] != json_report["date"]
+
+    json_report.pop("_id")
+    json_response.pop("_id")
+    json_report.pop("date")
+    json_response.pop("date")
+    assert json_response == json_report
 
 
 @mock.patch('reports.database.get_connection')

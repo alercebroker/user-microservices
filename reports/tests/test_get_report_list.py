@@ -32,11 +32,11 @@ def test_get_report_list_with_elements(mock_connection):
     response = utils.client.get("/")
     assert response.status_code == 200
 
-    json = response.json()
-    assert json["count"] == n
-    assert json["previous"] is None
-    assert json["next"] is None
-    assert json["results"] == utils.create_jsons(reports)
+    json_response = response.json()
+    assert json_response["count"] == n
+    assert json_response["previous"] is None
+    assert json_response["next"] is None
+    assert json_response["results"] == utils.create_jsons(reports)
 
 
 @mock.patch('reports.database.get_connection')
@@ -52,11 +52,11 @@ def test_get_report_list_paginated_with_next(mock_connection):
     response = utils.client.get("/", params={"page": page, "page_size": size})
     assert response.status_code == 200
 
-    json = response.json()
-    assert json["count"] == n
-    assert json["previous"] is None
-    assert json["next"] == page + 1
-    assert json["results"] == utils.create_jsons(reports)
+    json_response = response.json()
+    assert json_response["count"] == n
+    assert json_response["previous"] is None
+    assert json_response["next"] == page + 1
+    assert json_response["results"] == utils.create_jsons(reports)
 
 
 @mock.patch('reports.database.get_connection')
@@ -72,11 +72,11 @@ def test_get_report_list_paginated_with_previous(mock_connection):
     response = utils.client.get("/", params={"page": page, "page_size": size})
     assert response.status_code == 200
 
-    json = response.json()
-    assert json["count"] == n
-    assert json["previous"] == page - 1
-    assert json["next"] is None
-    assert json["results"] == utils.create_jsons(reports)
+    json_response = response.json()
+    assert json_response["count"] == n
+    assert json_response["previous"] == page - 1
+    assert json_response["next"] is None
+    assert json_response["results"] == utils.create_jsons(reports)
 
 
 @mock.patch('reports.database.get_connection')
@@ -92,8 +92,8 @@ def test_get_report_list_paginated_with_previous_and_next(mock_connection):
     response = utils.client.get("/", params={"page": page, "page_size": size})
     assert response.status_code == 200
 
-    json = response.json()
-    assert json["count"] == n
-    assert json["previous"] == page - 1
-    assert json["next"] == page + 1
-    assert json["results"] == utils.create_jsons(reports)
+    json_response = response.json()
+    assert json_response["count"] == n
+    assert json_response["previous"] == page - 1
+    assert json_response["next"] == page + 1
+    assert json_response["results"] == utils.create_jsons(reports)
