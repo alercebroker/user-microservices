@@ -2,7 +2,7 @@ import json
 from unittest import mock
 
 from db_handler.models import Report
-from pymongo import errors
+from pymongo.errors import DuplicateKeyError
 
 from . import utils
 
@@ -102,7 +102,7 @@ def test_put_create_report_duplicate_fails(mock_connection):
     report = utils.report_factory()
 
     update_one = mock.AsyncMock()
-    update_one.side_effect = errors.DuplicateKeyError(error="")
+    update_one.side_effect = DuplicateKeyError(error="")
     mock_connection.return_value.find_one_and_update = update_one
 
     response = utils.client.put(f"/{oid}", content=json.dumps(utils.json_converter(report)))
@@ -115,7 +115,7 @@ def test_patch_create_report_duplicate_fails(mock_connection):
     report = utils.report_factory()
 
     update_one = mock.AsyncMock()
-    update_one.side_effect = errors.DuplicateKeyError(error="")
+    update_one.side_effect = DuplicateKeyError(error="")
     mock_connection.return_value.find_one_and_update = update_one
 
     response = utils.client.patch(f"/{oid}", content=json.dumps(utils.json_converter(report)))

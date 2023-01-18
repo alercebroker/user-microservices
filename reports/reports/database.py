@@ -37,7 +37,7 @@ async def count_reports(q: BasePaginatedQuery) -> int:
     except ValueError as err:
         # Special case: When the collection is empty total will be an empty list
         if "not enough values to unpack" not in str(err):
-            raise
+            raise  # pragma: no cover
         return 0
     return total["total"]
 

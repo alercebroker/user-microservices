@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from unittest import mock
 
 from db_handler.models import Report
@@ -138,3 +138,29 @@ def test_read_reports_grouped_by_day(mock_connection):
 
     results = [{k: v.isoformat() if isinstance(v, date) else v for k, v in item.items()} for item in results]
     assert response.json() == results
+
+
+@mock.patch('reports.database.get_connection')
+def test_get_object_list(mock_connection):
+    objects = [{
+        "object": "object",
+        "first_date": datetime(2023, 1, 1, 0, 0, 0),
+        "last_date": datetime(2023, 1, 1, 0, 0, 0),
+        "count": 1,
+        "source": ["source"],
+        "report_type": ["report_type"],
+        "users": ["user"]
+    }]
+
+    cursor_to_list = mock.AsyncMock()
+    mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
+    cursor_to_list.side_effect = [{"total": 1}], objects
+
+    response = utils.client.get("/by_object")
+    assert response.status_code == 200
+
+    json_response = response.json()
+    assert json_response["count"] == 1
+    assert json_response["previous"] is None
+    assert json_response["next"] is None
+    assert json_response["results"] == utils.create_jsons(objects)
