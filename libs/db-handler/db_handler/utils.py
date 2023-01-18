@@ -31,9 +31,9 @@ class PyObjectId(ObjectId):
 
     @classmethod
     def validate(cls, v):
-        if not ObjectId.is_valid(v):
+        if not cls.is_valid(v):
             raise ValueError(f"Not a valid ObjectID: {v}")
-        return ObjectId(v)
+        return cls(v)
 
     @classmethod
     def __modify_schema__(cls, field_schema):

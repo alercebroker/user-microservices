@@ -1,14 +1,17 @@
 from datetime import date, datetime
 
 from db_handler.models import Report
-from db_handler.utils import SchemaMetaclass
+from db_handler.utils import SchemaMetaclass, PyObjectId
 from pydantic import BaseModel, Field
 
 
 class ReportOut(Report, metaclass=SchemaMetaclass):
     """Schema for individual reports"""
-    id: str = Field(..., description="Unique identifier in DB", alias="_id")
+    id: PyObjectId = Field(..., description="Unique identifier in DB", alias="_id")
     date: datetime = Field(..., description="Date and time of creation (UTC)")
+
+    class Config:
+        json_encoders = {PyObjectId: str}
 
 
 class ReportIn(ReportOut):
