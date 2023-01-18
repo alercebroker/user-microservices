@@ -1,4 +1,7 @@
+from datetime import date
 from unittest import mock
+
+from db_handler.models import Report
 
 from . import utils
 
@@ -97,3 +100,41 @@ def test_get_report_list_paginated_with_previous_and_next(mock_connection):
     assert json_response["previous"] == page - 1
     assert json_response["next"] == page + 1
     assert json_response["results"] == utils.create_jsons(reports)
+
+
+@mock.patch('reports.database.get_connection')
+def test_read_report_success(mock_connection):
+    oid = utils.random_oid()
+    report = utils.report_factory()
+
+    find_one = mock.AsyncMock()
+    find_one.return_value = report
+    mock_connection.return_value.find_one = find_one
+
+    response = utils.client.get(f"/{oid}")
+    assert response.status_code == 200
+    find_one.assert_awaited_once_with(Report, {"_id": oid})
+
+
+@mock.patch('reports.database.get_connection')
+def test_read_report_fails_if_missing_document(mock_connection):
+    oid = utils.random_oid()
+
+    find_one = mock.AsyncMock()
+    find_one.return_value = None
+    mock_connection.return_value.find_one = find_one
+
+    response = utils.client.get(f"/{oid}")
+    assert response.status_code == 404
+
+
+@mock.patch('reports.database.get_connection')
+def test_read_reports_grouped_by_day(mock_connection):
+    results = [{'day': date(2023, 1, 1), 'count': 1}, {'day': date(2023, 1, 2), 'count': 2}]
+    mock_connection.return_value.aggregate.return_value.__aiter__.return_value = results
+
+    response = utils.client.get(f"/count_by_day")
+    assert response.status_code == 200
+
+    results = [{k: v.isoformat() if isinstance(v, date) else v for k, v in item.items()} for item in results]
+    assert response.json() == results

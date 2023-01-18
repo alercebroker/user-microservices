@@ -8,8 +8,8 @@ WORKDIR /app/src/
 RUN pip install --no-cache-dir poetry
 COPY ./libs /app/libs
 COPY ./reports/poetry.lock ./reports/pyproject.toml /app/src/
-RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-cache --no-ansi
+RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-cache --without=dev
 
-COPY ./reports /app/src
+COPY ./reports/reports /app/src/reports
 
 CMD ["uvicorn", "reports.main:app", "--host", "0.0.0.0", "--port", "8000"]
