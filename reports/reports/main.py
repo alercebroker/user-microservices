@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pymongo import errors
 from starlette_prometheus import metrics, PrometheusMiddleware
 
-from .database import connection, DocumentNotFound
+from .database import get_connection, DocumentNotFound
 from .routes import root
 
 
@@ -26,13 +26,13 @@ app.include_router(root)
 
 @app.on_event("startup")
 async def startup():
-    await connection.connect()
-    await connection.create_db()
+    await get_connection().connect()
+    await get_connection().create_db()
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    await connection.close()
+    await get_connection().close()
 
 
 @app.exception_handler(errors.DuplicateKeyError)
