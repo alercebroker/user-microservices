@@ -32,8 +32,15 @@ jobs:
             db-handler:
               - 'libs/db-handler/**'
       - name: Test reports API
-        if: steps.changes.outputs.reports-api == 'true'
+        if: steps.changes.outputs.reports-api == 'false'
         run: |
           cd ${GITHUB_WORKSPACE}/reports
+          poetry --no-root install
+          poetry run pytest
+      - name: Test db-handler
+        if: steps.changes.outputs.db-handler == 'true'
+        run: |
+          echo ${GITHUB_WORKSPACE}
+          cd ${GITHUB_WORKSPACE}/libs/db-handler
           poetry --no-root install
           poetry run pytest
