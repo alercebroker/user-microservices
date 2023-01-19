@@ -11,7 +11,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      api-service: ${{ steps.changes.output.api-service }}
+      reports-api: ${{ steps.changes.output.reports-api }}
       db-handler: ${{ steps.changes.output.db-handler }}
     steps:
       - name: Detect changes
@@ -37,7 +37,7 @@ jobs:
           options: "--check --verbose"
           src: "${GITHUB_WORKSPACE}/reports/reports"
       - name: Run black for reports API
-        if: needs.detect-changes.outputs.reports-api == 'true'
+        if: needs.detect-changes.outputs.db-handler == 'true'
         uses: psf/black@stable
         with:
           options: "--check --verbose"
