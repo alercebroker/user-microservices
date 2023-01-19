@@ -11,8 +11,8 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      reports-api: ${{ steps.changes.output.reports-api }}
-      db-handler: ${{ steps.changes.output.db-handler }}
+      reports-api: ${{ steps.changes.outputs.reports-api }}
+      db-handler: ${{ steps.changes.outputs.db-handler }}
     steps:
       - name: Detect changes
         uses: dorny/paths-filter@v2
