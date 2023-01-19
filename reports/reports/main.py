@@ -42,7 +42,7 @@ async def bad_request_for_duplicates(request, exc):
 
 
 @app.exception_handler(ServerSelectionTimeoutError)
-async def bad_request_for_duplicates(request, exc):
+async def database_is_down(request, exc):
     message = f"Cannot connect to database server: {str(exc)}"
     return JSONResponse(status_code=503, content={"detail": message})
 
