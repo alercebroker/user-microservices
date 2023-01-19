@@ -133,3 +133,6 @@ dmypy.json
 
 # No poetry.lock in libraries
 libs/**/poetry.lock
+
+# Emacs backups
+*~
