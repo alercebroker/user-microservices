@@ -34,16 +34,18 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+      - name: Install flake8
+        run: pip install flake8
       - name: Lint with flake8 for db-handler
         if: needs.detect-changes.outputs.db-handler == 'true'
         run: |
-          pip install flake8
-          flake8 ${GITHUB_WORKSPACE}/libs/db-handler/db_handler --show-source --max-complexity=10 --max-line-length=127
+          cd ${GITHUB_WORKSPACE}/libs/db-handler/db_handler
+          flake8 . --count --statistics --show-source --max-complexity=10 --max-line-length=127
       - name: Lint with flake8 for reports API
         if: needs.detect-changes.outputs.reports-api == 'true'
         run: |
-          pip install flake8
-          flake8 ${GITHUB_WORKSPACE}/reports/reports --show-source --max-complexity=10 --max-line-length=127
+          cd ${GITHUB_WORKSPACE}/reports/reports
+          flake8 . --count --statistics --show-source --max-complexity=10 --max-line-length=127
   tests:
     needs: detect-changes
     runs-on: ubuntu-latest
