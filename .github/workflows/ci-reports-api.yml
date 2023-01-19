@@ -34,7 +34,6 @@ jobs:
       - name: Test reports API
         if: steps.changes.outputs.reports-api == 'true'
         run: |
-          cd reports
-          pwd
+          cd ${GITHUB_WORKSPACE}/reports
           poetry --no-root install
           poetry run pytest
