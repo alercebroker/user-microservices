@@ -1,7 +1,7 @@
 """API for interacting with reports"""
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 from starlette_prometheus import metrics, PrometheusMiddleware
 
 from .database import get_connection, DocumentNotFound
@@ -39,6 +39,12 @@ async def shutdown():
 async def bad_request_for_duplicates(request, exc):
     message = f"Duplicate document in database: {str(exc)}"
     return JSONResponse(status_code=400, content={"detail": message})
+
+
+@app.exception_handler(ServerSelectionTimeoutError)
+async def bad_request_for_duplicates(request, exc):
+    message = f"Cannot connect to database server: {str(exc)}"
+    return JSONResponse(status_code=503, content={"detail": message})
 
 
 @app.exception_handler(DocumentNotFound)

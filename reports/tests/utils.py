@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi.testclient import TestClient
 from db_handler.utils import ObjectId
@@ -30,10 +30,24 @@ def report_factory(**kwargs):
     return report
 
 
+def report_by_object_factory(**kwargs):
+    report = {
+        "object": "AL" + ''.join(random.choices('1234567890', k=7)),
+        "first_date": datetime.utcnow(),
+        "last_date": datetime.utcnow(),
+        "count": 1,
+        "source": ["source"],
+        "report_type": ["report_type"],
+        "users": ["user"]
+    }
+    report.update(kwargs)
+    return report
+
+
 def json_converter(report):
     output = {}
     for k, v in report.items():
-        if isinstance(v, datetime):
+        if isinstance(v, (datetime, date)):
             output[k] = v.isoformat()
         elif isinstance(v, ObjectId):
             output[k] = str(v)
@@ -43,7 +57,11 @@ def json_converter(report):
 
 
 def create_reports(n=1):
-    return [report_factory(_id=random_oid()) for _ in range(n)]
+    return [report_factory() for _ in range(n)]
+
+
+def create_reports_by_object(n=1):
+    return [report_by_object_factory() for _ in range(n)]
 
 
 def create_jsons(reports):
