@@ -37,7 +37,7 @@ async def read_report(report_id: str) -> dict:
 
 async def count_reports(q: BasePaginatedQuery) -> int:
     try:
-        total, = await get_connection().aggregate(Report, q.count_pipeline()).to_list(1)
+        (total,) = await get_connection().aggregate(Report, q.count_pipeline()).to_list(1)
     except ValueError as err:
         # Special case: When the collection is empty total will be an empty list
         if "not enough values to unpack" not in str(err):
@@ -53,7 +53,7 @@ async def read_paginated_reports(q: BasePaginatedQuery) -> dict:
         "count": total,
         "next": q.page + 1 if q.skip + q.limit < total else None,
         "previous": q.page - 1 if q.page > 1 else None,
-        "results": results
+        "results": results,
     }
 
 

@@ -7,11 +7,9 @@ from db_handler import PyObjectId, MongoModelMetaclass
 
 class Report(BaseModel, metaclass=MongoModelMetaclass):
     """Full mongo model for reports"""
+
     __tablename__ = "reports"
-    __indexes__ = [
-        IndexModel([("owner", 1), ("object", 1), ("report_type", 1)], unique=True),
-        IndexModel([("date", -1)])
-    ]
+    __indexes__ = [IndexModel([("owner", 1), ("object", 1), ("report_type", 1)], unique=True), IndexModel([("date", -1)])]
 
     id: PyObjectId = Field(default_factory=lambda: PyObjectId(), description="Unique identifier in DB", alias="_id")
     date: datetime = Field(default_factory=lambda: datetime.utcnow(), description="Date and time of creation (UTC)")

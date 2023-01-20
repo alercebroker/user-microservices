@@ -9,6 +9,7 @@ from ._base import PaginatedModel
 
 class ReportOut(database.Report, metaclass=SchemaMetaclass):
     """Schema for individual reports"""
+
     id: PyObjectId = Field(..., description="Unique identifier in DB", alias="_id")
     date: datetime = Field(..., description="Date and time of creation (UTC)")
 
@@ -18,16 +19,19 @@ class ReportOut(database.Report, metaclass=SchemaMetaclass):
 
 class ReportIn(ReportOut):
     """Schema for report insertion"""
+
     __exclude__ = {"id", "date"}
 
 
 class ReportUpdate(ReportIn):
     """Schema for report updating"""
+
     __all_optional__ = True
 
 
 class PaginatedReports(PaginatedModel):
     """Schema for paginated reports"""
+
     results: list[ReportOut] = Field(..., description="List of reports matching query")
 
     class Config(ReportOut.Config):

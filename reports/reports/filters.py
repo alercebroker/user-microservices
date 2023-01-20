@@ -22,19 +22,21 @@ class CommonQueries:
 
     recipes: ClassVar[tuple[query.QueryRecipe]] = (
         query.QueryRecipe("date", ["$gte", "$lte"], ["date_after", "date_before"]),
-        query.QueryRecipe("object", ["$regex"], ["object"])
+        query.QueryRecipe("object", ["$regex"], ["object"]),
     )
 
 
 @dataclasses.dataclass
 class QueryByReport(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return individual reports, directly as they come from the database."""
+
     order_by: ReportFields = Query("date", description="Field to sort by")
 
 
 @dataclasses.dataclass
 class QueryByObject(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return reports grouped by object."""
+
     order_by: ObjectFields = Query("last_date", description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
@@ -45,7 +47,7 @@ class QueryByObject(CommonQueries, query.BasePaginatedQuery):
             "users": {"$addToSet": "$owner"},
             "source": {"$addToSet": "$source"},
             "report_type": {"$addToSet": "$report_type"},
-            "count": {"$count": {}}
+            "count": {"$count": {}},
         }
         return super()._query_pipeline() + [{"$group": group}, {"$set": {"object": "$_id"}}]
 
@@ -53,16 +55,9 @@ class QueryByObject(CommonQueries, query.BasePaginatedQuery):
 @dataclasses.dataclass
 class QueryByDay(CommonQueries, query.BaseSortedQuery):
     """Queries that return number of reports per day."""
+
     order_by: DayCountFields = Query("day", description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
-        group = {
-            "_id": {
-                "$dateTrunc": {
-                    "date": "$date",
-                    "unit": "day"
-                }
-            },
-            "count": {"$count": {}}
-        }
+        group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}
         return super()._query_pipeline() + [{"$group": group}, {"$set": {"day": "$_id"}}]
