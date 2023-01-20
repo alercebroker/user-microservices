@@ -2,12 +2,13 @@ name: Template for test running
 on:
   workflow_call:
     inputs:
-      base:  # Base folder wrt respect to repo root
+      package:
         required: true
         type: string
-      src:  # Source folder wrt to base folder
-        required: true
+      prefix:
+        required: false
         type: string
+        default: ""
 
 jobs:
   lint-and-test:
@@ -25,9 +26,13 @@ jobs:
           poetry-version: '1.3.1'
       - name: Install dependencies
         run: |
-          cd ${GITHUB_WORKSPACE}/${{ inputs.base }}
+          cd ${{ inputs.prefix }}${{ inputs.package }}
           poetry --no-root install
       - name: Lint with black
-        run: poetry run black --check ${{ inputs.src }}
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry run black --check ${{ inputs.package }}
       - name: Test with pytest
-        run: poetry run pytest
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry run pytest
