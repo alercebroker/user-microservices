@@ -24,36 +24,9 @@ jobs:
               - 'libs/db-handler/**'
             query-lib:
               - 'libs/query/**'
-  lint:
+  db-library:
     needs: detect-changes
-    if: needs.detect-changes.outputs.db-lib == 'false'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Install flake8
-        run: pip install flake8
-      - name: Lint with flake8 for db library
-        if: needs.detect-changes.outputs.db-lib == 'true'
-        run: |
-          cd ${GITHUB_WORKSPACE}/libs/db-handler/db_handler
-          flake8 . --count --statistics --show-source --max-complexity=10 --max-line-length=127
-      - name: Lint with flake8 for query library
-        if: needs.detect-changes.outputs.query-lib == 'true'
-        run: |
-          cd ${GITHUB_WORKSPACE}/libs/query/query
-          flake8 . --count --statistics --show-source --max-complexity=10 --max-line-length=127
-      - name: Lint with flake8 for reports API
-        if: needs.detect-changes.outputs.reports-api == 'true'
-        run: |
-          cd ${GITHUB_WORKSPACE}/reports/reports
-          flake8 . --count --statistics --show-source --max-complexity=10 --max-line-length=127
-  tests:
-    needs: detect-changes
+    if: needs.detect-changes.outputs.db-lib == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -66,20 +39,62 @@ jobs:
         uses: abatilo/actions-poetry@v2
         with:
           poetry-version: '1.3.1'
-      - name: Test db library
-        if: needs.detect-changes.outputs.db-lib == 'true'
+      - name: Lint with black
+        run: |
+          cd ${GITHUB_WORKSPACE}/libs/db-handler
+          poetry --no-root install
+          poetry run black --check db_handler
+      - name: Test with pytest
         run: |
           cd ${GITHUB_WORKSPACE}/libs/db-handler
           poetry --no-root install
           poetry run pytest
-      - name: Test db library
-        if: needs.detect-changes.outputs.query-lib == 'true'
+  query-library:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.query-lib == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '1.3.1'
+      - name: Lint with black
+        run: |
+          cd ${GITHUB_WORKSPACE}/libs/query
+          poetry --no-root install
+          poetry run black --check query
+      - name: Test with pytest
         run: |
           cd ${GITHUB_WORKSPACE}/libs/query
           poetry --no-root install
           poetry run pytest
-      - name: Test reports API
-        if: needs.detect-changes.outputs.reports-api == 'true'
+  reports-api:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reports-api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '1.3.1'
+      - name: Lint with black
+        run: |
+          cd ${GITHUB_WORKSPACE}/reports
+          poetry --no-root install
+          poetry run black --check reports
+      - name: Test with pytest
         run: |
           cd ${GITHUB_WORKSPACE}/reports
           poetry --no-root install
