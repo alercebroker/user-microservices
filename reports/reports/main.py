@@ -6,11 +6,13 @@ from starlette_prometheus import metrics, PrometheusMiddleware
 
 from .database import get_connection, DocumentNotFound
 from .routes import root
+from . import __version__
 
 
 app = FastAPI(
     title="Reports API",
     description=__doc__,
+    version=__version__,
     contact={
         "name": "ALeRCE Broker",
         "email": "alercebroker@gmail.com",

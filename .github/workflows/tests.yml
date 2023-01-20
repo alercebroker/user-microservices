@@ -65,7 +65,7 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/libs/db-handler
           poetry --no-root install
-          poetry run pytest'
+          poetry run pytest
       - name: Test reports API
         if: needs.detect-changes.outputs.reports-api == 'true'
         run: |
