@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from . import base
+from ._base import PaginatedModel
 
 
 class ReportByObject(BaseModel):
@@ -16,6 +16,6 @@ class ReportByObject(BaseModel):
     users: list[str] = Field(..., description="Reporting user(s)")
 
 
-class PaginatedReportsByObject(base.PaginatedModel):
+class PaginatedReportsByObject(PaginatedModel):
     """Schema for paginated reports grouped by object"""
     results: list[ReportByObject] = Field(..., description="List of objects matching query")

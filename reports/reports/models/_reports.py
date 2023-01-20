@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import Field
 from db_handler import PyObjectId, SchemaMetaclass
 
-from . import base
 from .. import database
+from ._base import PaginatedModel
 
 
 class ReportOut(database.Report, metaclass=SchemaMetaclass):
@@ -26,7 +26,7 @@ class ReportUpdate(ReportIn):
     __all_optional__ = True
 
 
-class PaginatedReports(base.PaginatedModel):
+class PaginatedReports(PaginatedModel):
     """Schema for paginated reports"""
     results: list[ReportOut] = Field(..., description="List of reports matching query")
 
