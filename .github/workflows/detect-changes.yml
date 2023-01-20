@@ -1,6 +1,13 @@
 name: Detect changes
 on:
   workflow_call:
+    outputs:
+      reports-api:
+        value: ${{ jobs.detect-changes.outputs.reports-api }}
+      db-lib:
+        value: ${{ jobs.detect-changes.outputs.db-lib }}
+      query-lib:
+        value: ${{ jobs.detect-changes.outputs.query-lib }}
 
 jobs:
   detect-changes:
