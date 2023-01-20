@@ -4,10 +4,10 @@ on:
     inputs:
       base:  # Base folder wrt respect to repo root
         required: true
-        type: str
+        type: string
       src:  # Source folder wrt to base folder
         required: true
-        type: str
+        type: string
 
 jobs:
   lint-and-test:
