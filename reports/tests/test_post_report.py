@@ -4,16 +4,16 @@ from unittest import mock
 
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
-from reports.models import Report
+from reports.database import Report
 from . import utils
 
 report = utils.report_factory()
 endpoint = "/"
 
 
-@mock.patch('reports.models._reports.PyObjectId')
-@mock.patch('reports.models._reports.datetime')
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._models.PyObjectId')
+@mock.patch('reports.database._models.datetime')
+@mock.patch('reports.database._interactions.get_connection')
 def test_create_report_ignores_fields_not_defined_in_schema(mock_connection, mock_datetime, mock_oid):
     date = datetime(2023, 1, 1, 0, 0, 0)
     oid = utils.random_oid()
@@ -40,7 +40,7 @@ def test_create_report_fails_if_missing_fields_defined_in_schema():
     assert response.status_code == 422
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_create_report_duplicate_fails(mock_connection):
     insert_one = mock.AsyncMock()
     insert_one.side_effect = DuplicateKeyError(error="")
@@ -50,7 +50,7 @@ def test_create_report_duplicate_fails(mock_connection):
     assert response.status_code == 400
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_create_report_fails_if_database_is_down(mock_connection):
     insert_one = mock.AsyncMock()
     insert_one.side_effect = ServerSelectionTimeoutError()

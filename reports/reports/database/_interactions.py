@@ -2,10 +2,10 @@ from functools import lru_cache
 
 from db_handler.connection import MongoConnection
 from db_handler.utils import DocumentNotFound, ObjectId
+from query import BaseQuery, BasePaginatedQuery
 
-from .filters import BaseQuery, BasePaginatedQuery
-from .models import Report, ReportIn
-from .settings import MongoSettings
+from ._models import Report
+from ..settings import MongoSettings
 
 
 @lru_cache
@@ -18,7 +18,7 @@ def get_connection() -> MongoConnection:
     return MongoConnection(get_settings())
 
 
-async def create_report(report: ReportIn) -> Report:
+async def create_report(report: Report) -> Report:
     report = Report(**report.dict())
     await get_connection().insert_one(Report, report.dict(by_alias=True))
     return report
@@ -57,7 +57,7 @@ async def read_all_reports(q: BaseQuery) -> list[dict]:
     return [_ async for _ in get_connection().aggregate(Report, q.pipeline())]
 
 
-async def update_report(report_id: str, report: ReportIn) -> dict:
+async def update_report(report_id: str, report: Report) -> dict:
     match = {"_id": ObjectId(report_id)}
     update = {"$set": report.dict(exclude_none=True)}
     report = await get_connection().find_one_and_update(Report, match, update, return_document=True)

@@ -698,6 +698,24 @@ files = [
 ]
 
 [[package]]
+name = "query"
+version = "0.1.0"
+description = ""
+category = "main"
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
+
+[package.dependencies]
+fastapi = "^0.88.0"
+pydantic = "^1.10.4"
+
+[package.source]
+type = "directory"
+url = "../libs/query"
+
+[[package]]
 name = "rfc3986"
 version = "1.5.0"
 description = "Validating URI References per RFC 3986"
@@ -969,4 +987,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a8f8738a4e5db2b43ae84e4548cdef7049a8d3b17d250a9c01a738caa805ffe6"
+content-hash = "53c11a3f42e417ebf2308816526bafa8aa975818c155f73a07aae64504c8822a"

@@ -2,11 +2,11 @@ from unittest import mock
 
 from pymongo.errors import ServerSelectionTimeoutError
 
-from reports.models import Report
+from reports.database import Report
 from . import utils
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_delete_report_success(mock_connection):
     oid = utils.random_oid()
     report = utils.report_factory()
@@ -20,7 +20,7 @@ def test_delete_report_success(mock_connection):
     delete_one.assert_awaited_once_with(Report, {"_id": oid})
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_delete_report_fails_if_missing_document(mock_connection):
     oid = utils.random_oid()
 
@@ -32,7 +32,7 @@ def test_delete_report_fails_if_missing_document(mock_connection):
     assert response.status_code == 404
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_delete_report_fails_if_database_is_down(mock_connection):
     oid = utils.random_oid()
 

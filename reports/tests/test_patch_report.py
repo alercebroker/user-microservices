@@ -3,7 +3,7 @@ from unittest import mock
 
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
-from reports.models import Report
+from reports.database import Report
 from . import utils
 
 
@@ -12,7 +12,7 @@ report = utils.report_factory()
 endpoint = f"/{oid}"
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_patch_ignores_fields_not_defined_in_schema(mock_connection):
     update_one = mock.AsyncMock()
     update_one.return_value = report
@@ -25,7 +25,7 @@ def test_patch_ignores_fields_not_defined_in_schema(mock_connection):
     update_one.assert_awaited_once_with(Report, {"_id": oid}, {"$set": to_modify}, return_document=True)
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_patch_ignores_missing_fields_defined_in_schema(mock_connection):
     update_one = mock.AsyncMock()
     update_one.return_value = report
@@ -38,7 +38,7 @@ def test_patch_ignores_missing_fields_defined_in_schema(mock_connection):
     update_one.assert_awaited_once_with(Report, {"_id": oid}, {"$set": incomplete_input}, return_document=True)
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_patch_fails_if_missing_document(mock_connection):
     update_one = mock.AsyncMock()
     update_one.return_value = None
@@ -48,7 +48,7 @@ def test_patch_fails_if_missing_document(mock_connection):
     assert response.status_code == 404
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_patch_report_duplicate_fails(mock_connection):
     update_one = mock.AsyncMock()
     update_one.side_effect = DuplicateKeyError(error="")
@@ -58,7 +58,7 @@ def test_patch_report_duplicate_fails(mock_connection):
     assert response.status_code == 400
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_patch_report_fails_if_database_is_down(mock_connection):
     update_one = mock.AsyncMock()
     update_one.side_effect = ServerSelectionTimeoutError()

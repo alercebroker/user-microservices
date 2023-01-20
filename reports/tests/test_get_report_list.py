@@ -7,7 +7,7 @@ from . import utils
 endpoint = "/"
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_get_report_list_empty(mock_connection):
     cursor_to_list = mock.AsyncMock()
     mock_connection.return_value.aggregate.return_value.to_list = cursor_to_list
@@ -24,7 +24,7 @@ def test_get_report_list_empty(mock_connection):
     assert json["results"] == []
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_get_report_list_with_elements(mock_connection):
     n = 2
     reports = utils.create_reports(n)
@@ -43,7 +43,7 @@ def test_get_report_list_with_elements(mock_connection):
     assert json_response["results"] == utils.create_jsons(reports)
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_get_report_list_paginated_with_next(mock_connection):
     n, size = 6, 2
     page = 1
@@ -63,7 +63,7 @@ def test_get_report_list_paginated_with_next(mock_connection):
     assert json_response["results"] == utils.create_jsons(reports)
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_get_report_list_paginated_with_previous(mock_connection):
     n, size = 6, 2
     page = n // size + (1 if n % size else 0)
@@ -83,7 +83,7 @@ def test_get_report_list_paginated_with_previous(mock_connection):
     assert json_response["results"] == utils.create_jsons(reports)
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_get_report_list_paginated_with_previous_and_next(mock_connection):
     n, size = 6, 2
     page = n // size - 1 + (1 if n % size else 0)
@@ -103,7 +103,7 @@ def test_get_report_list_paginated_with_previous_and_next(mock_connection):
     assert json_response["results"] == utils.create_jsons(reports)
 
 
-@mock.patch('reports.database.get_connection')
+@mock.patch('reports.database._interactions.get_connection')
 def test_read_report_list_fails_if_database_is_down(mock_connection):
     mock_connection.return_value.aggregate.side_effect = ServerSelectionTimeoutError()
 
