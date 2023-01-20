@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncI
 from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
 from pydantic import BaseSettings
 
-from .utils import MongoModelMetaclass
+from ._utils import MongoModelMetaclass
 
 
 class _MongoConfig(UserDict):

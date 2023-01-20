@@ -1,7 +1,6 @@
 from functools import lru_cache
 
-from db_handler.connection import MongoConnection
-from db_handler.utils import PyObjectId
+from db_handler import MongoConnection, PyObjectId
 from query import BaseQuery, BasePaginatedQuery
 
 from ._models import Report

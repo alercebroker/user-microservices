@@ -1,8 +1,8 @@
 import random
 from datetime import date, datetime
 
+from bson import ObjectId
 from fastapi.testclient import TestClient
-from db_handler.utils import ObjectId
 
 from reports.main import app
 

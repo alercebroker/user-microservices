@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pymongo import IndexModel
 from pydantic import BaseModel, Field
-from db_handler.utils import PyObjectId, MongoModelMetaclass
+from db_handler import PyObjectId, MongoModelMetaclass
 
 
 class Report(BaseModel, metaclass=MongoModelMetaclass):

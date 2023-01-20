@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import Field
-from db_handler.utils import PyObjectId, SchemaMetaclass
+from db_handler import PyObjectId, SchemaMetaclass
 
 from . import base
 from .. import database
