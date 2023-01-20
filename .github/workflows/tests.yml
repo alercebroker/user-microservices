@@ -3,9 +3,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'libs/**'
-      - 'reports/**'
 
 jobs:
   detect-changes:
