@@ -1,18 +1,5 @@
 from bson import ObjectId
-from pydantic import BaseModel, main
-
-
-def get_fields(model: type[BaseModel], by_alias: bool = True) -> tuple:
-    """Get all fields in given model.
-
-    Args:
-        model (type[BaseModel]): Model to search for the fields
-        by_alias (bool): Include fields by alias (if given) rather than name
-
-    Returns:
-        tuple[str]: Field names
-    """
-    return tuple(f.alias if by_alias else f.name for f in model.__fields__.values())
+from pydantic import main
 
 
 class DocumentNotFound(ValueError):

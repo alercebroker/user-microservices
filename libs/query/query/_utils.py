@@ -1,7 +1,21 @@
-from typing import Literal, NamedTuple, ClassVar
+from enum import Enum, IntEnum
+from typing import NamedTuple, ClassVar
 
 from fastapi import Query
+from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
+
+
+def field_enum_factory(model: type[BaseModel], by_alias: bool = True, *, exclude: set | None = None) -> type[Enum]:
+    name = model.__name__ + "Fields"
+    fields = [field.alias if by_alias else field.name for field in model.__fields__.values()]
+    exclude = exclude or set()
+    return Enum(name, {field: field for field in fields if field not in exclude}, type=str)
+
+
+class Direction(IntEnum):
+    ascending = 1
+    descending = -1
 
 
 class QueryRecipe(NamedTuple):
@@ -83,12 +97,12 @@ class BaseSortedQuery(BaseQuery):
     Subclasses MUST implement instructions for `order_by`.
     This mainly refers to adding the available options, a default and proper description.
     """
-    order_by: Literal[""]
-    direction: Literal["1", "-1"] = Query("-1", description="Sort by ascending or descending values")
+    order_by: Enum
+    direction: Direction = Query(Direction.descending, description="Sort by ascending or descending values")
 
     def _sort(self) -> list[dict]:
         """Generates sort stage for pipeline"""
-        return [{"$sort": {self.order_by: int(self.direction)}}] if self.order_by else []
+        return [{"$sort": {self.order_by: self.direction}}]
 
     def pipeline(self) -> list[dict]:
         """Aggregation pipeline for mongo.
