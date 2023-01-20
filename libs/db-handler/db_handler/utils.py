@@ -1,8 +1,5 @@
-from typing import ClassVar
-
 from bson import ObjectId
-from pymongo import IndexModel
-from pydantic import BaseModel, Field, main
+from pydantic import BaseModel, main
 
 
 def get_fields(model: type[BaseModel], by_alias: bool = True) -> tuple:
@@ -57,7 +54,7 @@ class MongoModelMetaclass(main.ModelMetaclass):
     If the model does not have `__tablename__`, it will be quietly ignored and a standard
     model will be added, without including it in `models`.
     """
-    __models = []
+    __models__ = set()
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
@@ -67,7 +64,7 @@ class MongoModelMetaclass(main.ModelMetaclass):
         except AttributeError:
             return cls
 
-        if any(tablename == model.__tablename__ for model in mcs.__models):
+        if any(tablename == model.__tablename__ for model in mcs.__models__):
             if mcs.__is_schema__:
                 # Prevents schemas from adding tables
                 return cls
@@ -75,12 +72,8 @@ class MongoModelMetaclass(main.ModelMetaclass):
 
         if not hasattr(cls, "__indexes__"):
             cls.__indexes__ = []
-        mcs.__models.append(cls)
+        mcs.__models__.add(cls)
         return cls
-
-    @property
-    def models(self) -> tuple:
-        return tuple(self.__models)
 
 
 class SchemaMetaclass(MongoModelMetaclass):
@@ -119,17 +112,3 @@ class SchemaMetaclass(MongoModelMetaclass):
             field.default_factory = None
             field.default = None
         return cls
-
-
-class BaseModelWithId(BaseModel, metaclass=MongoModelMetaclass):
-    """Class that automatically handles the default `_id` from MongoDB
-
-    If using your own value for `_id` it is recommended to still inherit from this class
-    and simply override with a different type and default or default factory, given that the
-    relevant metaclass for creating collections is already introduced here. Do not forget
-    to set the alias to `_id` if overriding the field.
-    """
-    __tablename__: ClassVar[str]
-    __indexes__: ClassVar[list[IndexModel]]
-
-    id: PyObjectId = Field(default_factory=lambda: PyObjectId(), description="Unique identifier in DB", alias="_id")

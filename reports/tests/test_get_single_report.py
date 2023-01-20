@@ -1,8 +1,8 @@
 from unittest import mock
 
-from db_handler.models import Report
 from pymongo.errors import ServerSelectionTimeoutError
 
+from reports.models import Report
 from . import utils
 
 oid = utils.random_oid()

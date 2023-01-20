@@ -2,17 +2,17 @@ import json
 from datetime import datetime
 from unittest import mock
 
-from db_handler.models import Report
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
+from reports.models import Report
 from . import utils
 
 report = utils.report_factory()
 endpoint = "/"
 
 
-@mock.patch('db_handler.utils.PyObjectId')
-@mock.patch('db_handler.models.datetime')
+@mock.patch('reports.models._reports.PyObjectId')
+@mock.patch('reports.models._reports.datetime')
 @mock.patch('reports.database.get_connection')
 def test_create_report_ignores_fields_not_defined_in_schema(mock_connection, mock_datetime, mock_oid):
     date = datetime(2023, 1, 1, 0, 0, 0)

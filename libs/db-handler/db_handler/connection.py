@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncI
 from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
 from pydantic import BaseSettings
 
-from .models import BaseModelWithId
+from .utils import MongoModelMetaclass
 
 
 class _MongoConfig(UserDict):
@@ -64,45 +64,45 @@ class MongoConnection:
         self._client = None
 
     async def create_db(self):
-        for cls in BaseModelWithId.models:
+        for cls in MongoModelMetaclass.__models__:
             if cls.__indexes__:
                 await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
 
     async def drop_db(self):
         await self._client.drop_database(self._config.db)
 
-    async def find_one(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+    async def find_one(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
         return await self.db[model.__tablename__].find_one(*args, **kwargs)
 
-    async def find_one_and_delete(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+    async def find_one_and_delete(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
         return await self.db[model.__tablename__].find_one_and_delete(*args, **kwargs)
 
-    async def find_one_and_replace(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+    async def find_one_and_replace(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
         return await self.db[model.__tablename__].find_one_and_replace(*args, **kwargs)
 
-    async def find_one_and_update(self, model: type[BaseModelWithId], *args, **kwargs) -> dict | None:
+    async def find_one_and_update(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
         return await self.db[model.__tablename__].find_one_and_update(*args, **kwargs)
 
-    def find(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
+    def find(self, model: MongoModelMetaclass, *args, **kwargs) -> AsyncIOMotorCursor:
         return self.db[model.__tablename__].find(*args, **kwargs)
 
-    async def delete_one(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
+    async def delete_one(self, model: MongoModelMetaclass, *args, **kwargs) -> DeleteResult:
         return await self.db[model.__tablename__].delete_one(*args, **kwargs)
 
-    async def delete_many(self, model: type[BaseModelWithId], *args, **kwargs) -> DeleteResult:
+    async def delete_many(self, model: MongoModelMetaclass, *args, **kwargs) -> DeleteResult:
         return await self.db[model.__tablename__].delete_many(*args, **kwargs)
 
-    async def insert_one(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertOneResult:
+    async def insert_one(self, model: MongoModelMetaclass, *args, **kwargs) -> InsertOneResult:
         return await self.db[model.__tablename__].insert_one(*args, **kwargs)
 
-    async def insert_many(self, model: type[BaseModelWithId], *args, **kwargs) -> InsertManyResult:
+    async def insert_many(self, model: MongoModelMetaclass, *args, **kwargs) -> InsertManyResult:
         return await self.db[model.__tablename__].insert_many(*args, **kwargs)
 
-    async def update_one(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
+    async def update_one(self, model: MongoModelMetaclass, *args, **kwargs) -> UpdateResult:
         return await self.db[model.__tablename__].update_one(*args, **kwargs)
 
-    async def update_many(self, model: type[BaseModelWithId], *args, **kwargs) -> UpdateResult:
+    async def update_many(self, model: MongoModelMetaclass, *args, **kwargs) -> UpdateResult:
         return await self.db[model.__tablename__].update_many(*args, **kwargs)
 
-    def aggregate(self, model: type[BaseModelWithId], *args, **kwargs) -> AsyncIOMotorCursor:
+    def aggregate(self, model: MongoModelMetaclass, *args, **kwargs) -> AsyncIOMotorCursor:
         return self.db[model.__tablename__].aggregate(*args, **kwargs)
