@@ -25,9 +25,7 @@ class _MongoConfig(UserDict):
     def __init__(self, seq=None, **kwargs):
         super().__init__(seq, **kwargs)
         if self.REQUIRED_KEYS.difference(self.keys()):
-            missing = ", ".join(
-                key.upper() for key in self.REQUIRED_KEYS.difference(self.keys())
-            )
+            missing = ", ".join(key.upper() for key in self.REQUIRED_KEYS.difference(self.keys()))
             raise ValueError(f"Invalid configuration. Missing keys: {missing}")
         self._db = self.pop("database")
 
@@ -38,9 +36,7 @@ class _MongoConfig(UserDict):
 
     def __setitem__(self, key: str, value: Any):
         """Converts keys from (case-insensitive) `snake_case` to `lowerCamelCase`"""
-        klist = [
-            w.lower() if i == 0 else w.title() for i, w in enumerate(key.split("_"))
-        ]
+        klist = [w.lower() if i == 0 else w.title() for i, w in enumerate(key.split("_"))]
         super().__setitem__("".join(klist), value)
 
 
@@ -58,8 +54,6 @@ class MongoConnection:
         self._client = AsyncIOMotorClient(connect=True, **self._config)
 
     async def close(self):
-        if self._client is None:
-            raise ValueError("Connection is not established")
         self._client.close()
         self._client = None
 

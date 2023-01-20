@@ -5,11 +5,10 @@ from fastapi import Query
 from pydantic import BaseModel, dataclasses
 
 
-def field_enum_factory(model: type[BaseModel], by_alias: bool = True, *, exclude: set | None = None) -> type[Enum]:
-    name = model.__name__ + "Fields"
-    fields = [field.alias if by_alias else field.name for field in model.__fields__.values()]
-    exclude = exclude or set()
-    return Enum(name, {field: field for field in fields if field not in exclude}, type=str)
+def field_enum_factory(model: type[BaseModel], by_alias: bool = True, *, exclude=None) -> type[Enum]:
+    name, exclude = model.__name__ + "Fields", exclude or set()
+    definition = {field.name: field.alias if by_alias else field.name for field in model.__fields__.values()}
+    return Enum(name, {k: v for k, v in definition.items() if k not in exclude}, type=str)
 
 
 class Direction(IntEnum):
