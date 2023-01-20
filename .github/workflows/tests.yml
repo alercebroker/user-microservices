@@ -26,6 +26,7 @@ jobs:
               - 'libs/query/**'
   lint:
     needs: detect-changes
+    if: needs.detect-changes.outputs.db-lib == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
