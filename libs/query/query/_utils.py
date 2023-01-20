@@ -27,6 +27,7 @@ class QueryRecipe(NamedTuple):
         operators (list[str]): Mongo operators used for filtering
         attributes (list[str]): Class attribute names containing values for the operators
     """
+
     field: str
     operators: list[str]
     attributes: list[str]
@@ -58,6 +59,7 @@ class BaseQuery:
     Attributes:
         recipes (tuple[QueryRecipe]): Recipes for filter creation
     """
+
     recipes: ClassVar[tuple[QueryRecipe]]
 
     def _match(self) -> list[dict]:
@@ -95,6 +97,7 @@ class BaseSortedQuery(BaseQuery):
     Subclasses MUST implement instructions for `order_by`.
     This mainly refers to adding the available options, a default and proper description.
     """
+
     order_by: Enum
     direction: Direction = Query(Direction.descending, description="Sort by ascending or descending values")
 
@@ -114,6 +117,7 @@ class BaseSortedQuery(BaseQuery):
 @dataclasses.dataclass
 class BasePaginatedQuery(BaseSortedQuery):
     """Base class for handling typical queries on reports with pagination."""
+
     page: int = Query(1, description="Page for paginated results", ge=1)
     page_size: int = Query(10, description="Number of reports per page", ge=1)
 
