@@ -2,8 +2,7 @@ from enum import Enum, IntEnum
 from typing import NamedTuple, ClassVar
 
 from fastapi import Query
-from pydantic import BaseModel
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, dataclasses
 
 
 def field_enum_factory(model: type[BaseModel], by_alias: bool = True, *, exclude: set | None = None) -> type[Enum]:
@@ -51,7 +50,7 @@ class QueryRecipe(NamedTuple):
         return self.field, condition
 
 
-@dataclass
+@dataclasses.dataclass
 class BaseQuery:
     """Basic class for generating query parameters.
 
@@ -90,7 +89,7 @@ class BaseQuery:
         return self._query_pipeline() + [{"$count": "total"}]
 
 
-@dataclass
+@dataclasses.dataclass
 class BaseSortedQuery(BaseQuery):
     """Base class for handling typical queries that require sorting.
 
@@ -113,7 +112,7 @@ class BaseSortedQuery(BaseQuery):
         return super().pipeline() + self._sort()
 
 
-@dataclass
+@dataclasses.dataclass
 class BasePaginatedQuery(BaseSortedQuery):
     """Base class for handling typical queries on reports with pagination."""
     page: int = Query(1, description="Page for paginated results", ge=1)

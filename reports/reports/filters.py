@@ -1,35 +1,39 @@
 from datetime import datetime
 from typing import Pattern, ClassVar
 
+import query
 from fastapi import Query
-from pydantic.dataclasses import dataclass
-from query import QueryRecipe, BaseSortedQuery, BasePaginatedQuery, field_enum_factory
+from pydantic import dataclasses
 
 from .models import ReportOut, ReportByObject, ReportByDay
 
 
-ReportFields = field_enum_factory(ReportOut)
-ObjectFields = field_enum_factory(ReportByObject)
-DayCountFields = field_enum_factory(ReportByDay)
+ReportFields = query.field_enum_factory(ReportOut)
+ObjectFields = query.field_enum_factory(ReportByObject)
+DayCountFields = query.field_enum_factory(ReportByDay)
 
 
-@dataclass
-class QueryByReport(BasePaginatedQuery):
-    """Queries that will return individual reports, directly as they come from the database."""
+@dataclasses.dataclass
+class CommonQueries:
     date_after: datetime | None = Query(None, description="Starting date of reports")
     date_before: datetime | None = Query(None, description="End date of reports")
     object: Pattern | None = Query(None, description="Reports for object IDs matching regex")
     owned: bool = Query(False, description="Whether to include only reports owned by requesting user")
-    order_by: ReportFields = Query("date", description="Field to sort by")
 
-    recipes: ClassVar[tuple[QueryRecipe]] = (
-        QueryRecipe("date", ["$gte", "$lte"], ["date_after", "date_before"]),
-        QueryRecipe("object", ["$regex"], ["object"])
+    recipes: ClassVar[tuple[query.QueryRecipe]] = (
+        query.QueryRecipe("date", ["$gte", "$lte"], ["date_after", "date_before"]),
+        query.QueryRecipe("object", ["$regex"], ["object"])
     )
 
 
-@dataclass
-class QueryByObject(QueryByReport):
+@dataclasses.dataclass
+class QueryByReport(CommonQueries, query.BasePaginatedQuery):
+    """Queries that will return individual reports, directly as they come from the database."""
+    order_by: ReportFields = Query("date", description="Field to sort by")
+
+
+@dataclasses.dataclass
+class QueryByObject(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return reports grouped by object."""
     order_by: ObjectFields = Query("last_date", description="Field to sort by")
 
@@ -46,12 +50,10 @@ class QueryByObject(QueryByReport):
         return super()._query_pipeline() + [{"$group": group}, {"$set": {"object": "$_id"}}]
 
 
-@dataclass
-class QueryByDay(BaseSortedQuery):
+@dataclasses.dataclass
+class QueryByDay(CommonQueries, query.BaseSortedQuery):
     """Queries that return number of reports per day."""
     order_by: DayCountFields = Query("day", description="Field to sort by")
-
-    recipes: ClassVar[tuple[QueryRecipe]] = ()
 
     def _query_pipeline(self) -> list[dict]:
         group = {
