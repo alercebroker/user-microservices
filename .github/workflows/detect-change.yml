@@ -1,0 +1,24 @@
+name: Detect changes
+on:
+  workflow_call:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      reports-api: ${{ steps.changes.outputs.reports-api }}
+      db-lib: ${{ steps.changes.outputs.db-lib }}
+      query-lib: ${{ steps.changes.outputs.query-lib }}
+    steps:
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            reports-api:
+              - 'reports/**'
+              - 'libs/**'
+            db-lib:
+              - 'libs/db-handler/**'
+            query-lib:
+              - 'libs/query/**'
