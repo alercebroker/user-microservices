@@ -2,11 +2,6 @@ from bson import ObjectId
 from pydantic import main
 
 
-class DocumentNotFound(ValueError):
-    def __init__(self, identifier):
-        super().__init__(f"Document not found. ID: {identifier}")
-
-
 class PyObjectId(ObjectId):
     """Custom type to allow for bson's ObjectId to be declared as types in pydantic models"""
     @classmethod
