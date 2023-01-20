@@ -31,7 +31,7 @@ jobs:
       - name: Lint with black
         run: |
           cd ${{ inputs.prefix }}${{ inputs.package }}
-          poetry run black --check ${{ inputs.package }}
+          poetry run black --verbose --check ${{ inputs.package }}
       - name: Test with pytest
         run: |
           cd ${{ inputs.prefix }}${{ inputs.package }}
