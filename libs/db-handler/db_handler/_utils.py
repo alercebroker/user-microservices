@@ -4,6 +4,7 @@ from pydantic import main
 
 class PyObjectId(ObjectId):
     """Custom type to allow for bson's ObjectId to be declared as types in pydantic models"""
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -36,6 +37,7 @@ class MongoModelMetaclass(main.ModelMetaclass):
     If the model does not have `__tablename__`, it will be quietly ignored and a standard
     model will be added, without including it in `models`.
     """
+
     __models__ = set()
 
     def __new__(mcs, name, bases, namespace, **kwargs):
@@ -76,6 +78,7 @@ class SchemaMetaclass(MongoModelMetaclass):
     The metaclass attribute `__is_schema__` is used to prevent `MongoModelMetaclass`
     from trying to add the schema to the models.
     """
+
     __is_schema__ = True
 
     def __new__(mcs, name, bases, namespace, **kwargs):
