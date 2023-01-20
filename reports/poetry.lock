@@ -197,7 +197,7 @@ pydantic = "^1.10.4"
 
 [package.source]
 type = "directory"
-url = "../libs/db-handler"
+url = "../libs/db_handler"
 
 [[package]]
 name = "dnspython"
@@ -1062,4 +1062,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "320e5a18a3334d0e8e470bdea4ba136ec50be984ffd6ba8d32f792a998271859"
+content-hash = "b7e81c81710df9a5cd897d7e759fb285ec4ead990804facfc52be031af7ddb69"
