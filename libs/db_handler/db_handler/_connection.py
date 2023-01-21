@@ -1,11 +1,12 @@
 from collections import UserDict
 from typing import Any
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCursor
-from pymongo.results import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
-from pydantic import BaseSettings
+from bson.errors import InvalidId
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pydantic import BaseModel, BaseSettings
+from query import BaseQuery, BasePaginatedQuery
 
-from ._utils import MongoModelMetaclass
+from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
 
 
 class _MongoConfig(UserDict):
@@ -58,45 +59,62 @@ class MongoConnection:
         self._client = None
 
     async def create_db(self):
-        for cls in MongoModelMetaclass.__models__:
+        for cls in ModelMetaclass.__models__:
             if cls.__indexes__:
                 await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
 
-    async def drop_db(self):
-        await self._client.drop_database(self._config.db)
+    async def create_document(self, model: ModelMetaclass, document: BaseModel, by_alias: bool = True) -> dict:
+        document = model(**document.dict()).dict(by_alias=by_alias)
+        await self.db[model.__tablename__].insert_one(document)
+        return document
 
-    async def find_one(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
-        return await self.db[model.__tablename__].find_one(*args, **kwargs)
+    async def read_document(self, model: ModelMetaclass, oid: str) -> dict:
+        try:
+            document = await self.db[model.__tablename__].find_one({"_id": PyObjectId(oid)})
+        except InvalidId:  # Second attempt if _id is not a BSON ObjectId
+            document = await self.db[model.__tablename__].find_one({"_id": oid})
+        if document is None:
+            raise DocumentNotFound(oid)
+        return document
 
-    async def find_one_and_delete(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
-        return await self.db[model.__tablename__].find_one_and_delete(*args, **kwargs)
+    async def update_document(self, model: ModelMetaclass, oid: str, update: BaseModel) -> dict:
+        try:
+            match = {"_id": PyObjectId(oid)}
+        except InvalidId:
+            match = {"_id": oid}
+        update = {"$set": update.dict(exclude_none=True)}
+        document = await self.db[model.__tablename__].find_one_and_update(match, update, return_document=True)
+        if document is None:
+            raise DocumentNotFound(oid)
+        return document
 
-    async def find_one_and_replace(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
-        return await self.db[model.__tablename__].find_one_and_replace(*args, **kwargs)
+    async def delete_report(self, model: ModelMetaclass, oid: str):
+        try:
+            document = await self.db[model.__tablename__].find_one_and_delete({"_id": PyObjectId(oid)})
+        except InvalidId:
+            document = await self.db[model.__tablename__].find_one_and_delete({"_id": oid})
+        if document is None:
+            raise DocumentNotFound(oid)
 
-    async def find_one_and_update(self, model: MongoModelMetaclass, *args, **kwargs) -> dict | None:
-        return await self.db[model.__tablename__].find_one_and_update(*args, **kwargs)
+    async def count_documents(self, model: ModelMetaclass, q: BaseQuery) -> int:
+        try:
+            (total,) = await self.db[model.__tablename__].aggregate(q.count_pipeline()).to_list(1)
+        except ValueError as err:
+            # Special case: When the collection is empty total will be an empty list
+            if "not enough values to unpack" not in str(err):
+                raise  # pragma: no cover
+            return 0
+        return total["total"]
 
-    def find(self, model: MongoModelMetaclass, *args, **kwargs) -> AsyncIOMotorCursor:
-        return self.db[model.__tablename__].find(*args, **kwargs)
+    async def read_multiple_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
+        return [_ async for _ in self.db[model.__tablename__].aggregate(q.pipeline())]
 
-    async def delete_one(self, model: MongoModelMetaclass, *args, **kwargs) -> DeleteResult:
-        return await self.db[model.__tablename__].delete_one(*args, **kwargs)
-
-    async def delete_many(self, model: MongoModelMetaclass, *args, **kwargs) -> DeleteResult:
-        return await self.db[model.__tablename__].delete_many(*args, **kwargs)
-
-    async def insert_one(self, model: MongoModelMetaclass, *args, **kwargs) -> InsertOneResult:
-        return await self.db[model.__tablename__].insert_one(*args, **kwargs)
-
-    async def insert_many(self, model: MongoModelMetaclass, *args, **kwargs) -> InsertManyResult:
-        return await self.db[model.__tablename__].insert_many(*args, **kwargs)
-
-    async def update_one(self, model: MongoModelMetaclass, *args, **kwargs) -> UpdateResult:
-        return await self.db[model.__tablename__].update_one(*args, **kwargs)
-
-    async def update_many(self, model: MongoModelMetaclass, *args, **kwargs) -> UpdateResult:
-        return await self.db[model.__tablename__].update_many(*args, **kwargs)
-
-    def aggregate(self, model: MongoModelMetaclass, *args, **kwargs) -> AsyncIOMotorCursor:
-        return self.db[model.__tablename__].aggregate(*args, **kwargs)
+    async def read_paginated_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> dict:
+        total = await self.count_documents(model, q)
+        results = await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)
+        return {
+            "count": total,
+            "next": q.page + 1 if q.skip + q.limit < total else None,
+            "previous": q.page - 1 if q.page > 1 else None,
+            "results": results,
+        }

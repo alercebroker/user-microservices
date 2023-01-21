@@ -1,10 +1,7 @@
 from functools import lru_cache
 
-from bson.errors import InvalidId
-from db_handler import MongoConnection, PyObjectId
-from query import BaseQuery, BasePaginatedQuery
+from db_handler import MongoConnection
 
-from ._models import Report
 from ..settings import MongoSettings
 
 
@@ -16,69 +13,3 @@ def get_settings() -> MongoSettings:
 @lru_cache
 def get_connection() -> MongoConnection:
     return MongoConnection(get_settings())
-
-
-class DocumentNotFound(ValueError):
-    def __init__(self, oid):
-        super().__init__(f"Document not found. ID: {oid}")
-
-
-def _oid(oid: str) -> PyObjectId:
-    try:
-        return PyObjectId(oid)
-    except InvalidId:  # Invalid ID
-        raise DocumentNotFound(oid)  # pragma: no cover
-
-
-async def create_report(report: Report) -> Report:
-    report = Report(**report.dict())
-    await get_connection().insert_one(Report, report.dict(by_alias=True))
-    return report
-
-
-async def read_report(report_id: str) -> dict:
-    report = await get_connection().find_one(Report, {"_id": _oid(report_id)})
-    if report is None:
-        raise DocumentNotFound(report_id)
-    return report
-
-
-async def count_reports(q: BasePaginatedQuery) -> int:
-    try:
-        (total,) = await get_connection().aggregate(Report, q.count_pipeline()).to_list(1)
-    except ValueError as err:
-        # Special case: When the collection is empty total will be an empty list
-        if "not enough values to unpack" not in str(err):
-            raise  # pragma: no cover
-        return 0
-    return total["total"]
-
-
-async def read_paginated_reports(q: BasePaginatedQuery) -> dict:
-    total = await count_reports(q)
-    results = await get_connection().aggregate(Report, q.pipeline()).to_list(q.limit)
-    return {
-        "count": total,
-        "next": q.page + 1 if q.skip + q.limit < total else None,
-        "previous": q.page - 1 if q.page > 1 else None,
-        "results": results,
-    }
-
-
-async def read_all_reports(q: BaseQuery) -> list[dict]:
-    return [_ async for _ in get_connection().aggregate(Report, q.pipeline())]
-
-
-async def update_report(report_id: str, report: Report) -> dict:
-    match = {"_id": _oid(report_id)}
-    update = {"$set": report.dict(exclude_none=True)}
-    report = await get_connection().find_one_and_update(Report, match, update, return_document=True)
-    if report is None:
-        raise DocumentNotFound(report_id)
-    return report
-
-
-async def delete_report(report_id: str):
-    report = await get_connection().find_one_and_delete(Report, {"_id": _oid(report_id)})
-    if report is None:
-        raise DocumentNotFound(report_id)

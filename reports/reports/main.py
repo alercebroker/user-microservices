@@ -1,10 +1,11 @@
 """API for interacting with reports"""
+from db_handler import DocumentNotFound
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 from starlette_prometheus import metrics, PrometheusMiddleware
 
-from .database import get_connection, DocumentNotFound
+from .database import get_connection
 from .routes import root
 from . import __version__
 

@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from pymongo import IndexModel
 from pydantic import BaseModel, Field
-from db_handler import PyObjectId, MongoModelMetaclass
+from db_handler import PyObjectId, ModelMetaclass
 
 
 def _oid() -> PyObjectId:
@@ -15,7 +15,7 @@ def _utcnow() -> datetime:
     return now.replace(microsecond=(now.microsecond // 1000) * 1000, tzinfo=None)
 
 
-class Report(BaseModel, metaclass=MongoModelMetaclass):
+class Report(BaseModel, metaclass=ModelMetaclass):
     """Full mongo model for reports"""
 
     __tablename__ = "reports"

@@ -2,6 +2,11 @@ from bson import ObjectId
 from pydantic import main
 
 
+class DocumentNotFound(ValueError):
+    def __init__(self, oid):
+        super().__init__(f"Document not found. ID: {oid}")
+
+
 class PyObjectId(ObjectId):
     """Custom type to allow for bson's ObjectId to be declared as types in pydantic models"""
 
@@ -20,7 +25,7 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
-class MongoModelMetaclass(main.ModelMetaclass):
+class ModelMetaclass(main.ModelMetaclass):
     """Metaclass for MongoDB models
 
     This essentially allows for the storage of models intended to represent collections
@@ -60,7 +65,7 @@ class MongoModelMetaclass(main.ModelMetaclass):
         return cls
 
 
-class SchemaMetaclass(MongoModelMetaclass):
+class SchemaMetaclass(ModelMetaclass):
     """Metaclass for creating schemas based on Mongo models
 
     This allows for inheriting from classes of type `MongoModelMetaclass` and
