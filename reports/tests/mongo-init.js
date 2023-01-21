@@ -81,4 +81,13 @@ db.reports.insertMany([
     report_type: "type1",
     owner: "user3"
   },
+  {
+    date: new ISODate("2023-01-03T12:00:00Z"),
+    object: "OBJECT4",
+    solved: false,
+    source: "source1",
+    observation: "obs1",
+    report_type: "type1",
+    owner: "user3"
+  },
 ])

@@ -2,9 +2,9 @@ import pytest
 
 from .. import utils
 
-endpoint = '/'
+endpoint = '/by_object'
 
-total = 10  # Number of reports in mongo-init.js
+total = 4  # Number of objects in mongo-init.js
 page_size = total // 3
 last_page = 3 + (1 if total % 3 else 0)
 
@@ -12,25 +12,25 @@ cutoff_date = '2023-01-01T23:59:59'
 
 
 @pytest.mark.usefixtures('mongo_service')
-def test_query_order_by_date_ascending():
+def test_query_order_by_last_date_ascending():
     with utils.client:
-        result = utils.client.get(endpoint, params={'order_by': 'date', 'direction': 1})
+        result = utils.client.get(endpoint, params={'order_by': 'last_date', 'direction': 1})
 
     assert result.status_code == 200
     assert result.json()["count"] == len(result.json()["results"]) == total
 
-    dates = [report["date"] for report in result.json()["results"]]
+    dates = [report["last_date"] for report in result.json()["results"]]
     assert dates == sorted(dates)
 
 
 @pytest.mark.usefixtures('mongo_service')
-def test_query_order_by_date_descending():
+def test_query_order_by_last_date_descending():
     with utils.client:
-        result = utils.client.get(endpoint, params={'order_by': 'date', 'direction': -1})
+        result = utils.client.get(endpoint, params={'order_by': 'last_date', 'direction': -1})
 
     assert result.status_code == 200
 
-    dates = [obj["date"] for obj in result.json()["results"]]
+    dates = [obj["last_date"] for obj in result.json()["results"]]
     assert dates == sorted(dates, reverse=True)
 
 
@@ -151,7 +151,8 @@ def test_query_by_date_before():
     assert result.status_code == 200
     assert 0 < result.json()["count"] < total  # Just to make sure there's something here
 
-    assert all(report["date"] <= cutoff_date for report in result.json()["results"])
+    assert all(report["last_date"] <= cutoff_date for report in result.json()["results"])
+    assert all(report["first_date"] <= cutoff_date for report in result.json()["results"])
 
 
 @pytest.mark.usefixtures('mongo_service')
@@ -162,4 +163,5 @@ def test_query_by_date_after():
     assert result.status_code == 200
     assert 0 < result.json()["count"] < total  # Just to make sure there's something here
 
-    assert all(report["date"] >= cutoff_date for report in result.json()["results"])
+    assert all(report["last_date"] >= cutoff_date for report in result.json()["results"])
+    assert all(report["first_date"] >= cutoff_date for report in result.json()["results"])
