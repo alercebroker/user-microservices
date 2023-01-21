@@ -2,7 +2,7 @@ from unittest import mock
 
 from pymongo.errors import ServerSelectionTimeoutError
 
-from . import utils
+from .. import utils
 
 endpoint = "/"
 

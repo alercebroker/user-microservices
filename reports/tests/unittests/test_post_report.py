@@ -5,7 +5,7 @@ from unittest import mock
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
 from reports.database import Report
-from . import utils
+from .. import utils
 
 report = utils.report_factory()
 endpoint = "/"
@@ -21,7 +21,7 @@ def test_create_report_ignores_fields_not_defined_in_schema(mock_connection, moc
 
     insert_one = mock.AsyncMock()
     mock_connection.return_value.insert_one = insert_one
-    mock_datetime.utcnow.return_value = date
+    mock_datetime.now.return_value = date
     mock_oid.return_value = oid
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))

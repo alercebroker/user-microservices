@@ -189,7 +189,7 @@ category = "main"
 optional = false
 python-versions = "^3.10"
 files = []
-develop = false
+develop = true
 
 [package.dependencies]
 motor = "^3.1.1"
@@ -780,7 +780,7 @@ category = "main"
 optional = false
 python-versions = "^3.10"
 files = []
-develop = false
+develop = true
 
 [package.dependencies]
 fastapi = "^0.88.0"
@@ -1062,4 +1062,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "b7e81c81710df9a5cd897d7e759fb285ec4ead990804facfc52be031af7ddb69"
+content-hash = "d2ee0cf840175924077d8914bb74321de07cb897131d9df62e810a264ae86767"

@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from bson.errors import InvalidId
 from db_handler import MongoConnection, PyObjectId
 from query import BaseQuery, BasePaginatedQuery
 
@@ -22,6 +23,13 @@ class DocumentNotFound(ValueError):
         super().__init__(f"Document not found. ID: {oid}")
 
 
+def _oid(oid: str) -> PyObjectId:
+    try:
+        return PyObjectId(oid)
+    except InvalidId:  # Invalid ID
+        raise DocumentNotFound(oid)  # pragma: no cover
+
+
 async def create_report(report: Report) -> Report:
     report = Report(**report.dict())
     await get_connection().insert_one(Report, report.dict(by_alias=True))
@@ -29,7 +37,7 @@ async def create_report(report: Report) -> Report:
 
 
 async def read_report(report_id: str) -> dict:
-    report = await get_connection().find_one(Report, {"_id": PyObjectId(report_id)})
+    report = await get_connection().find_one(Report, {"_id": _oid(report_id)})
     if report is None:
         raise DocumentNotFound(report_id)
     return report
@@ -62,7 +70,7 @@ async def read_all_reports(q: BaseQuery) -> list[dict]:
 
 
 async def update_report(report_id: str, report: Report) -> dict:
-    match = {"_id": PyObjectId(report_id)}
+    match = {"_id": _oid(report_id)}
     update = {"$set": report.dict(exclude_none=True)}
     report = await get_connection().find_one_and_update(Report, match, update, return_document=True)
     if report is None:
@@ -71,6 +79,6 @@ async def update_report(report_id: str, report: Report) -> dict:
 
 
 async def delete_report(report_id: str):
-    report = await get_connection().find_one_and_delete(Report, {"_id": PyObjectId(report_id)})
+    report = await get_connection().find_one_and_delete(Report, {"_id": _oid(report_id)})
     if report is None:
         raise DocumentNotFound(report_id)

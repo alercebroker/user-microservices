@@ -3,7 +3,7 @@ from unittest import mock
 from pymongo.errors import ServerSelectionTimeoutError
 
 from reports.database import Report
-from . import utils
+from .. import utils
 
 
 @mock.patch('reports.database._interactions.get_connection')

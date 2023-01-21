@@ -1,8 +1,18 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pymongo import IndexModel
 from pydantic import BaseModel, Field
 from db_handler import PyObjectId, MongoModelMetaclass
+
+
+def _oid() -> PyObjectId:
+    return PyObjectId()
+
+
+def _utcnow() -> datetime:
+    now = datetime.now(timezone.utc)
+    # Needed to keep in line with format allowed in MongoDB (millisecond resolution, unmarked TZ)
+    return now.replace(microsecond=(now.microsecond // 1000) * 1000, tzinfo=None)
 
 
 class Report(BaseModel, metaclass=MongoModelMetaclass):
@@ -11,8 +21,8 @@ class Report(BaseModel, metaclass=MongoModelMetaclass):
     __tablename__ = "reports"
     __indexes__ = [IndexModel([("owner", 1), ("object", 1), ("report_type", 1)], unique=True), IndexModel([("date", -1)])]
 
-    id: PyObjectId = Field(default_factory=lambda: PyObjectId(), description="Unique identifier in DB", alias="_id")
-    date: datetime = Field(default_factory=lambda: datetime.utcnow(), description="Date and time of creation (UTC)")
+    id: PyObjectId = Field(default_factory=_oid, description="Unique identifier in DB", alias="_id")
+    date: datetime = Field(default_factory=_utcnow, description="Date and time of creation (UTC)")
     object: str = Field(..., description="Reported object ID")
     solved: bool = Field(..., description="Report status")
     source: str = Field(..., description="Service of origin of the report")
