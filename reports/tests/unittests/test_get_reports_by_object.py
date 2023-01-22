@@ -2,10 +2,32 @@ from unittest import mock
 
 from pymongo.errors import ServerSelectionTimeoutError
 
+from reports.filters import QueryByObject
 from .. import utils
 
 
 endpoint = "/by_object"
+
+
+def test_query_pipeline_includes_grouping_stage():
+    pipeline = QueryByObject().pipeline()
+    group = {
+            "_id": "$object",
+            "first_date": {"$min": "$date"},
+            "last_date": {"$max": "$date"},
+            "users": {"$addToSet": "$owner"},
+            "source": {"$addToSet": "$source"},
+            "report_type": {"$addToSet": "$report_type"},
+            "count": {"$count": {}},
+        }
+
+    pipeline = [stage for stage in pipeline if "$group" in stage or "$set" in stage]
+
+    assert any("$group" in stage for stage in pipeline)
+    assert any("$set" in stage for stage in pipeline)
+
+    assert pipeline[0] == {"$group": group}
+    assert pipeline[1] == {"$set": {"object": "$_id"}}
 
 
 @mock.patch('reports.routes.database.get_connection')

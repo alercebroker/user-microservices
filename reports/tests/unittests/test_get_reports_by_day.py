@@ -2,10 +2,24 @@ from unittest import mock
 
 from pymongo.errors import ServerSelectionTimeoutError
 
+from reports.filters import QueryByDay
 from .. import utils
 
 
 endpoint = "/count_by_day"
+
+
+def test_query_pipeline_includes_grouping_stage():
+    pipeline = QueryByDay().pipeline()
+    group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}
+
+    pipeline = [stage for stage in pipeline if "$group" in stage or "$set" in stage]
+
+    assert any("$group" in stage for stage in pipeline)
+    assert any("$set" in stage for stage in pipeline)
+
+    assert pipeline[0] == {"$group": group}
+    assert pipeline[1] == {"$set": {"day": "$_id"}}
 
 
 @mock.patch('reports.routes.database.get_connection')
