@@ -5,7 +5,7 @@ from unittest import mock
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
 from reports.database import Report
-from reports.models import ReportIn
+from reports.schemas import ReportIn
 from .. import utils
 
 report = utils.report_factory()

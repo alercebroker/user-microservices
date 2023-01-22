@@ -5,7 +5,7 @@ import query
 from fastapi import Query
 from pydantic import dataclasses
 
-from .models import ReportOut, ReportByObject, ReportByDay
+from .schemas import ReportOut, ReportByObject, ReportByDay
 
 
 ReportFields = query.field_enum_factory(ReportOut)
