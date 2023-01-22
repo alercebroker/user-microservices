@@ -709,6 +709,26 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-docker"
+version = "1.0.1"
+description = "Simple pytest fixtures for Docker and docker-compose based tests"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pytest-docker-1.0.1.tar.gz", hash = "sha256:f6e8a1e660e2ba63a5bd28703cbb13636e0febd4623dafe047afa8254fb9db8f"},
+    {file = "pytest_docker-1.0.1-py3-none-any.whl", hash = "sha256:5dd39b10747f166d04946ba5b2bfb64e105b692679ca7191de9869d8f8f0640b"},
+]
+
+[package.dependencies]
+attrs = ">=19.2.0"
+pytest = ">=4.0,<8.0"
+
+[package.extras]
+docker-compose-v1 = ["docker-compose (>=1.27.3,<2.0)"]
+tests = ["pytest-pycodestyle (>=2.0.0,<3.0)", "pytest-pylint (>=0.14.1,<1.0)", "requests (>=2.22.0,<3.0)"]
+
+[[package]]
 name = "python-dotenv"
 version = "0.21.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -1063,4 +1083,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "81ee0c4e77b90b6f9e26014e1ef072e1de9d466947b8d6c103af09b1cf537212"
+content-hash = "16fd63b0a29d1e39bc5a22f249d69c31035102b5c34a1e2f916eae44baad0878"
