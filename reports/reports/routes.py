@@ -51,4 +51,4 @@ async def replace_existing_report(report_id: str, report: models.ReportIn = Body
 @root.delete("/{report_id}", status_code=204)
 async def delete_report(report_id: str):
     """Deletes existing report based on its ID"""
-    await database.get_connection().delete_report(database.Report, report_id)
+    await database.get_connection().delete_document(database.Report, report_id)

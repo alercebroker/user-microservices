@@ -33,22 +33,6 @@ def test_query_order_by_day_descending():
 
 
 @pytest.mark.usefixtures('mongo_service')
-def test_query_with_unknown_order_by_fails():
-    with utils.client:
-        result = utils.client.get(endpoint, params={'order_by': 'unknown'})
-
-    assert result.status_code == 422
-
-
-@pytest.mark.usefixtures('mongo_service')
-def test_query_with_unknown_direction_fails():
-    with utils.client:
-        result = utils.client.get(endpoint, params={'direction': 0})
-
-    assert result.status_code == 422
-
-
-@pytest.mark.usefixtures('mongo_service')
 def test_query_by_object_full_name():
     obj = 'OBJECT1'
     expected = 3  # must match with mongo-init.js

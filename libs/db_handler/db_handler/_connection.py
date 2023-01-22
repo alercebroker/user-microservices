@@ -88,12 +88,12 @@ class MongoConnection:
             raise DocumentNotFound(oid)
         return document
 
-    async def delete_report(self, model: ModelMetaclass, oid: str):
+    async def delete_document(self, model: ModelMetaclass, oid: str):
         try:
-            document = await self.db[model.__tablename__].find_one_and_delete({"_id": PyObjectId(oid)})
+            delete = await self.db[model.__tablename__].delete_one({"_id": PyObjectId(oid)})
         except InvalidId:
-            document = await self.db[model.__tablename__].find_one_and_delete({"_id": oid})
-        if document is None:
+            delete = await self.db[model.__tablename__].delete_one({"_id": oid})
+        if delete.deleted_count == 0:
             raise DocumentNotFound(oid)
 
     async def count_documents(self, model: ModelMetaclass, q: BaseQuery) -> int:

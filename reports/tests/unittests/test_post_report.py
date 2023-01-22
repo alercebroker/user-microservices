@@ -5,33 +5,33 @@ from unittest import mock
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
 from reports.database import Report
+from reports.models import ReportIn
 from .. import utils
 
 report = utils.report_factory()
 endpoint = "/"
 
 
-@mock.patch('reports.database._models.PyObjectId')
-@mock.patch('reports.database._models.datetime')
-@mock.patch('reports.database._interactions.get_connection')
-def test_create_report_ignores_fields_not_defined_in_schema(mock_connection, mock_datetime, mock_oid):
+@mock.patch('reports.routes.database.get_connection')
+def test_create_report_ignores_fields_not_defined_in_schema(mock_connection):
     date = datetime(2023, 1, 1, 0, 0, 0)
     oid = utils.random_oid()
     # Additional fields -> _id and date
 
-    insert_one = mock.AsyncMock()
-    mock_connection.return_value.insert_one = insert_one
-    mock_datetime.now.return_value = date
-    mock_oid.return_value = oid
+    create_document = mock.AsyncMock()
+    mock_connection.return_value.create_document = create_document
+    expected_output = report.copy()
+    expected_output["_id"] = oid
+    expected_output["date"] = date
+    create_document.return_value = expected_output
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 201
 
-    report.update({"_id": oid, "date": date})
-    insert_one.assert_awaited_once_with(Report, report)
+    create_document.assert_awaited_once_with(Report, ReportIn(**expected_output))
 
     json_response = response.json()
-    assert json_response == utils.json_converter(report)
+    assert json_response == utils.json_converter(expected_output)
 
 
 def test_create_report_fails_if_missing_fields_defined_in_schema():
@@ -40,21 +40,21 @@ def test_create_report_fails_if_missing_fields_defined_in_schema():
     assert response.status_code == 422
 
 
-@mock.patch('reports.database._interactions.get_connection')
+@mock.patch('reports.routes.database.get_connection')
 def test_create_report_duplicate_fails(mock_connection):
-    insert_one = mock.AsyncMock()
-    insert_one.side_effect = DuplicateKeyError(error="")
-    mock_connection.return_value.insert_one = insert_one
+    create_document = mock.AsyncMock()
+    create_document.side_effect = DuplicateKeyError(error="")
+    mock_connection.return_value.create_document = create_document
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 400
 
 
-@mock.patch('reports.database._interactions.get_connection')
+@mock.patch('reports.routes.database.get_connection')
 def test_create_report_fails_if_database_is_down(mock_connection):
-    insert_one = mock.AsyncMock()
-    insert_one.side_effect = ServerSelectionTimeoutError()
-    mock_connection.return_value.insert_one = insert_one
+    create_document = mock.AsyncMock()
+    create_document.side_effect = ServerSelectionTimeoutError()
+    mock_connection.return_value.create_document = create_document
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 503

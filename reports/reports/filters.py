@@ -30,14 +30,14 @@ class CommonQueries:
 class QueryByReport(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return individual reports, directly as they come from the database."""
 
-    order_by: ReportFields = Query("date", description="Field to sort by")
+    order_by: ReportFields = Query(ReportFields.date, description="Field to sort by")
 
 
 @dataclasses.dataclass
 class QueryByObject(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return reports grouped by object."""
 
-    order_by: ObjectFields = Query("last_date", description="Field to sort by")
+    order_by: ObjectFields = Query(ObjectFields.last_date, description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
         group = {
@@ -56,7 +56,7 @@ class QueryByObject(CommonQueries, query.BasePaginatedQuery):
 class QueryByDay(CommonQueries, query.BaseSortedQuery):
     """Queries that return number of reports per day."""
 
-    order_by: DayCountFields = Query("day", description="Field to sort by")
+    order_by: DayCountFields = Query(DayCountFields.day, description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
         group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}

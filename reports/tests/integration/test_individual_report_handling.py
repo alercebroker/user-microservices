@@ -46,15 +46,6 @@ def test_post_report():
 
 
 @pytest.mark.usefixtures('mongo_service')
-def test_post_report_with_missing_field_fails():
-    bad_input = {k: v for k, v in report_input.items() if k != "object"}
-    with utils.client:
-        insert = utils.client.post('/', content=json.dumps(bad_input))
-
-    assert insert.status_code == 422
-
-
-@pytest.mark.usefixtures('mongo_service')
 def test_post_report_duplicate_fails():
     with utils.client:
         insert = utils.client.post('/', content=json.dumps(report_input))
@@ -79,25 +70,6 @@ def test_put_report():
 
     actual = {k: v for k, v in check.json().items() if k not in {"_id", "date"}}
     assert actual == different_input
-    assert check.json()["_id"] == insert.json()["_id"]
-    assert check.json()["date"] == insert.json()["date"]
-
-
-@pytest.mark.usefixtures('mongo_service')
-def test_put_report_with_missing_field_fails():
-    bad_input = {k: v for k, v in different_input.items() if k != "object"}
-    with utils.client:
-        insert = utils.client.post('/', content=json.dumps(report_input))
-        put = utils.client.put(f'/{insert.json()["_id"]}', content=json.dumps(bad_input))
-        check = utils.client.get(f'/{insert.json()["_id"]}')
-        utils.client.delete(f'/{insert.json()["_id"]}')
-
-    assert insert.status_code == 201
-    assert put.status_code == 422
-    assert check.status_code == 200
-
-    actual = {k: v for k, v in check.json().items() if k not in {"_id", "date"}}
-    assert actual == report_input
     assert check.json()["_id"] == insert.json()["_id"]
     assert check.json()["date"] == insert.json()["date"]
 

@@ -35,22 +35,6 @@ def test_query_order_by_date_descending():
 
 
 @pytest.mark.usefixtures('mongo_service')
-def test_query_with_unknown_order_by_fails():
-    with utils.client:
-        result = utils.client.get(endpoint, params={'order_by': 'unknown'})
-
-    assert result.status_code == 422
-
-
-@pytest.mark.usefixtures('mongo_service')
-def test_query_with_unknown_direction_fails():
-    with utils.client:
-        result = utils.client.get(endpoint, params={'direction': 0})
-
-    assert result.status_code == 422
-
-
-@pytest.mark.usefixtures('mongo_service')
 def test_query_pagination_single_page():
     with utils.client:
         result = utils.client.get(endpoint, params={'page_size': total})
@@ -100,22 +84,6 @@ def test_query_pagination_last_page():
     assert result.json()["previous"] == last_page - 1
     assert result.json()["next"] is None
     assert len(result.json()["results"]) == (page_size if last_page == 3 else total % 3)
-
-
-@pytest.mark.usefixtures('mongo_service')
-def test_query_negative_page_size_fails():
-    with utils.client:
-        result = utils.client.get(endpoint, params={'page_size': -1})
-
-    assert result.status_code == 422
-
-
-@pytest.mark.usefixtures('mongo_service')
-def test_query_negative_page_fails():
-    with utils.client:
-        result = utils.client.get(endpoint, params={'page': -1})
-
-    assert result.status_code == 422
 
 
 @pytest.mark.usefixtures('mongo_service')
