@@ -3,7 +3,7 @@ from unittest import mock
 from db_handler import DocumentNotFound
 from pymongo.errors import ServerSelectionTimeoutError
 
-from reports.database import Report
+from reports.database.models import Report
 from .. import utils
 
 oid = utils.random_oid()

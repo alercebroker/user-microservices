@@ -1,4 +1,3 @@
-import os
 from unittest import mock
 
 from reports.database import get_settings, get_connection

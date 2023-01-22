@@ -3,11 +3,11 @@ from datetime import datetime
 from pydantic import Field
 from db_handler import PyObjectId, SchemaMetaclass
 
-from .. import database
+from ..database import models
 from ._base import PaginatedModel
 
 
-class ReportOut(database.Report, metaclass=SchemaMetaclass):
+class ReportOut(models.Report, metaclass=SchemaMetaclass):
     """Schema for individual reports"""
 
     id: PyObjectId = Field(..., description="Unique identifier in DB", alias="_id")

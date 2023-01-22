@@ -1,4 +1,3 @@
-from datetime import date
 from unittest import mock
 
 from pymongo.errors import ServerSelectionTimeoutError
