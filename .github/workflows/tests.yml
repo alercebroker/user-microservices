@@ -7,19 +7,19 @@ on:
 jobs:
   detect-changes:
     uses: ./.github/workflows/detect-changes.yml
-  db-library:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.db-lib == 'true'
-    uses: ./.github/workflows/test-template.yml
-    with:
-      package: db_handler
-      prefix: libs/
   query-library:
     needs: detect-changes
     if: needs.detect-changes.outputs.query-lib == 'true'
     uses: ./.github/workflows/test-template.yml
     with:
       package: query
+      prefix: libs/
+  db-library:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.db-lib == 'true'
+    uses: ./.github/workflows/test-template.yml
+    with:
+      package: db_handler
       prefix: libs/
   reports-api:
     needs: detect-changes

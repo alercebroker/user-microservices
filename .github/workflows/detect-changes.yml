@@ -24,8 +24,10 @@ jobs:
           filters: |
             reports-api:
               - 'reports/**'
-              - 'libs/**'
+              - 'libs/query/**'
+              - 'libs/db_handler/**'
             db-lib:
-              - 'libs/db-handler/**'
+              - 'libs/query/**'
+              - 'libs/db_handler/**'
             query-lib:
               - 'libs/query/**'
