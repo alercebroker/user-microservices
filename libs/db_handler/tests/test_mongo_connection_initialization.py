@@ -89,7 +89,6 @@ async def test_connection_gets_db_from_client(mock_client):
     mock_settings = mock.MagicMock()
     mock_settings.dict.return_value = input_settings
 
-    # Not the right type, but marks expectation
     mock_db = mock.MagicMock()
     mock_client.return_value.__getitem__.return_value = mock_db
 
