@@ -17,12 +17,8 @@ class PyObjectId(ObjectId):
     @classmethod
     def validate(cls, v):
         if not cls.is_valid(v):
-            raise ValueError(f"Not a valid ObjectID: {v}")
+            raise ValueError(f"Not a valid ObjectId: {v}")
         return cls(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
 
 
 class ModelMetaclass(main.ModelMetaclass):
@@ -54,7 +50,7 @@ class ModelMetaclass(main.ModelMetaclass):
             return cls
 
         if any(tablename == model.__tablename__ for model in mcs.__models__):
-            if mcs.__is_schema__:
+            if hasattr(mcs, "__is_schema__") and mcs.__is_schema__:
                 # Prevents schemas from adding tables
                 return cls
             raise ValueError(f"Duplicate collection name: {tablename}")

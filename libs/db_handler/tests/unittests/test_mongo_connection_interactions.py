@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from db_handler import PyObjectId, DocumentNotFound
-from . import utils
+from .. import utils
 
 
 @pytest.mark.asyncio
