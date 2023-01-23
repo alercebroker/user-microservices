@@ -1,21 +1,19 @@
 import pytest
 import pytest_asyncio
-from pydantic import BaseSettings, BaseModel, Field
+from pydantic import BaseModel, Field
 from pydantic.error_wrappers import ValidationError
 from pymongo import IndexModel
 
 from db_handler import MongoConnection, ModelMetaclass, PyObjectId, DocumentNotFound
 
 
-class Settings(BaseSettings):
-    host: str = "localhost"
-    port: int = 27017
-    username: str = "user"
-    password: str = "password"
-    database: str = "test"
-
-    class Config:
-        env_prefix = "mock_"  # Prevents getting overwritten by env variables
+settings = {
+    "host": "localhost",
+    "port": 27017,
+    "username": "user",
+    "password": "password",
+    "database": "test"
+}
 
 
 class Document(BaseModel, metaclass=ModelMetaclass):
@@ -33,7 +31,7 @@ insert = dict(_id=PyObjectId(oid), field1="mock", field2=1)
 
 @pytest_asyncio.fixture
 async def connection():
-    conn = MongoConnection(Settings())
+    conn = MongoConnection(settings)
     await conn.connect()
     await conn.create_db()
     yield conn

@@ -3,7 +3,6 @@ from typing import Any
 
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pydantic import BaseModel, BaseSettings
 from query import BaseQuery, BasePaginatedQuery
 
 from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
@@ -42,8 +41,8 @@ class _MongoConfig(UserDict):
 
 
 class MongoConnection:
-    def __init__(self, config: BaseSettings):
-        self._config = _MongoConfig(config.dict())
+    def __init__(self, config: dict):
+        self._config = _MongoConfig(config)
         self._client = None
 
     @property
@@ -66,6 +65,7 @@ class MongoConnection:
         await self._client.drop_database(self.db)
 
     async def create_document(self, model: ModelMetaclass, document: dict, by_alias: bool = True) -> dict:
+        """Fields in `document` not defined in `model` will be quietly ignored"""
         document = model(**document).dict(by_alias=by_alias)
         await self.db[model.__tablename__].insert_one(document)
         return document
@@ -80,6 +80,7 @@ class MongoConnection:
         return document
 
     async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict:
+        """Will quietly work even if `update` includes fields not defined in `model`"""
         try:
             match = {"_id": PyObjectId(oid)}
         except InvalidId:

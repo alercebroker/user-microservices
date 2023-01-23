@@ -12,4 +12,4 @@ def get_settings() -> MongoSettings:
 
 @lru_cache
 def get_connection() -> MongoConnection:
-    return MongoConnection(get_settings())
+    return MongoConnection(get_settings().dict())
