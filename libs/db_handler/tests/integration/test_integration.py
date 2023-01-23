@@ -21,12 +21,11 @@ class Document(BaseModel, metaclass=ModelMetaclass):
     __indexes__ = [IndexModel([("field2", 1)])]
 
     id: PyObjectId = Field(..., alias="_id")
-    field1: str
-    field2: int
+    field1: int
 
 
 oid = "123456789012345678901234"
-insert = dict(_id=PyObjectId(oid), field1="mock", field2=1)
+insert = dict(_id=PyObjectId(oid), field1=1)
 
 
 @pytest_asyncio.fixture
@@ -77,7 +76,8 @@ async def test_create_document_with_missing_field_fails(connection):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
 async def test_read_document(connection):
-    await connection.create_document(Document, insert)
+    db = connection.db
+    await db["table"].insert_one(insert)
 
     document = await connection.read_document(Document, oid)
 
@@ -100,7 +100,8 @@ async def test_read_non_existent_document_fails(connection):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
 async def test_update_document(connection):
-    await connection.create_document(Document, insert)
+    db = connection.db
+    await db["table"].insert_one(insert)
 
     document = await connection.update_document(Document, oid, {"field2": -1})
 
@@ -123,11 +124,11 @@ async def test_update_non_existent_document_fails(connection):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
 async def test_delete_document(connection):
-    await connection.create_document(Document, insert)
+    db = connection.db
+    await db["table"].insert_one(insert)
 
     await connection.delete_document(Document, oid)
 
-    db = connection.db
     actual = await db["table"].find_one({"_id": PyObjectId(oid)})
     assert actual is None
 
