@@ -67,3 +67,49 @@ def test_construction_fails_if_missing_username():
 
 def test_construction_fails_if_missing_password():
     _check_missing("password")
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_connection_creates_async_motor_client(mock_client):
+    mock_settings = mock.MagicMock()
+    mock_settings.dict.return_value = input_settings
+
+    conn = MongoConnection(mock_settings)
+    await conn.connect()
+
+    assert conn._client == mock_client.return_value
+    expected = {k: v for k, v in input_settings.items() if k != "database"}
+    mock_client.assert_called_once_with(**expected, connect=True)
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_connection_gets_db_from_client(mock_client):
+    mock_settings = mock.MagicMock()
+    mock_settings.dict.return_value = input_settings
+
+    # Not the right type, but marks expectation
+    mock_db = mock.MagicMock()
+    mock_client.return_value.__getitem__.return_value = mock_db
+
+    conn = MongoConnection(mock_settings)
+    await conn.connect()
+    db = conn.db
+
+    assert db == mock_db
+    mock_client.return_value.__getitem__.assert_called_once_with(input_settings["database"])
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_connection_closing(mock_client):
+    mock_settings = mock.MagicMock()
+    mock_settings.dict.return_value = input_settings
+
+    conn = MongoConnection(mock_settings)
+    await conn.connect()
+    await conn.close()
+
+    assert conn._client is None
+    mock_client.return_value.close.assert_called_once()

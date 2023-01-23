@@ -51,7 +51,7 @@ class MongoConnection:
         return self._client[self._config.db]
 
     async def connect(self):
-        """Establishes connection to a database and initializes a session."""
+        """Establishes connection to a database"""
         self._client = AsyncIOMotorClient(connect=True, **self._config)
 
     async def close(self):
