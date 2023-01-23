@@ -51,7 +51,6 @@ class MongoConnection:
         return self._client[self._config.db]
 
     async def connect(self):
-        """Establishes connection to a database"""
         self._client = AsyncIOMotorClient(connect=True, **self._config)
 
     async def close(self):
@@ -63,8 +62,11 @@ class MongoConnection:
             if cls.__indexes__:
                 await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
 
-    async def create_document(self, model: ModelMetaclass, document: BaseModel, by_alias: bool = True) -> dict:
-        document = model(**document.dict()).dict(by_alias=by_alias)
+    async def drop_db(self):
+        await self._client.drop_database(self.db)
+
+    async def create_document(self, model: ModelMetaclass, document: dict, by_alias: bool = True) -> dict:
+        document = model(**document).dict(by_alias=by_alias)
         await self.db[model.__tablename__].insert_one(document)
         return document
 
@@ -77,12 +79,12 @@ class MongoConnection:
             raise DocumentNotFound(oid)
         return document
 
-    async def update_document(self, model: ModelMetaclass, oid: str, update: BaseModel) -> dict:
+    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict:
         try:
             match = {"_id": PyObjectId(oid)}
         except InvalidId:
             match = {"_id": oid}
-        update = {"$set": update.dict(exclude_none=True)}
+        update = {"$set": update}
         document = await self.db[model.__tablename__].find_one_and_update(match, update, return_document=True)
         if document is None:
             raise DocumentNotFound(oid)

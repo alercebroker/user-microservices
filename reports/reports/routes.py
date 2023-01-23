@@ -28,7 +28,7 @@ async def count_reports_by_day(q: filters.QueryByDay = Depends()):
 @root.post("/", response_model=schemas.ReportOut, status_code=201)
 async def create_new_report(report: schemas.ReportIn = Body(...)):
     """Insert a new report in database. Date, ID and owner are set internally"""
-    return await database.get_connection().create_document(models.Report, report)
+    return await database.get_connection().create_document(models.Report, report.dict())
 
 
 @root.get("/{report_id}", response_model=schemas.ReportOut)
@@ -40,13 +40,13 @@ async def get_single_report(report_id: str):
 @root.patch("/{report_id}", response_model=schemas.ReportOut)
 async def update_existing_report(report_id: str, report: schemas.ReportUpdate = Body(...)):
     """Updates one or more fields of an existing report based on its ID"""
-    return await database.get_connection().update_document(models.Report, report_id, report)
+    return await database.get_connection().update_document(models.Report, report_id, report.dict(exclude_none=True))
 
 
 @root.put("/{report_id}", response_model=schemas.ReportOut)
 async def replace_existing_report(report_id: str, report: schemas.ReportIn = Body(...)):
     """Updates the full report based on its ID"""
-    return await database.get_connection().update_document(models.Report, report_id, report)
+    return await database.get_connection().update_document(models.Report, report_id, report.dict())
 
 
 @root.delete("/{report_id}", status_code=204)

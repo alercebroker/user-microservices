@@ -43,18 +43,19 @@ def test_post_report_ignores_fields_not_defined_in_schema(mock_connection):
 
     create_document = mock.AsyncMock()
     mock_connection.return_value.create_document = create_document
-    expected_output = report.copy()
-    expected_output["_id"] = oid
-    expected_output["date"] = date
-    create_document.return_value = expected_output
+    expected = report.copy()
+    expected["_id"] = oid
+    expected["date"] = date
+    create_document.return_value = expected
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 201
 
-    create_document.assert_awaited_once_with(models.Report, ReportIn(**expected_output))
+    insert_dict = {k: v for k, v in expected.items() if k not in {"_id", "date"}}
+    create_document.assert_awaited_once_with(models.Report, insert_dict)
 
     json_response = response.json()
-    assert json_response == utils.json_converter(expected_output)
+    assert json_response == utils.json_converter(expected)
 
 
 def test_post_report_fails_if_missing_fields_defined_in_schema():

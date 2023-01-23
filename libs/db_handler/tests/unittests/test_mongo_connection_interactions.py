@@ -53,15 +53,14 @@ async def test_create_document_by_alias(mock_client):
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    mock_entry = mock.MagicMock()
+    mock_entry = {"field1": 1, "field2": 2}
 
     await conn.create_document(mock_model, mock_entry)
 
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.insert_one.assert_awaited_once_with(mock_model.return_value.dict.return_value)
-    mock_model.assert_called_once_with(**mock_entry.dict.return_value)
+    mock_model.assert_called_once_with(**mock_entry)
     mock_model.return_value.dict.assert_called_once_with(by_alias=True)
-    mock_entry.dict.assert_called_once_with()
 
 
 @pytest.mark.asyncio
@@ -74,15 +73,14 @@ async def test_create_document_by_field(mock_client):
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    mock_entry = mock.MagicMock()
+    mock_entry = {"field1": 1, "field2": 2}
 
     await conn.create_document(mock_model, mock_entry, by_alias=False)
 
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.insert_one.assert_awaited_once_with(mock_model.return_value.dict.return_value)
-    mock_model.assert_called_once_with(**mock_entry.dict.return_value)
+    mock_model.assert_called_once_with(**mock_entry)
     mock_model.return_value.dict.assert_called_once_with(by_alias=False)
-    mock_entry.dict.assert_called_once_with()
 
 
 @pytest.mark.asyncio
@@ -151,12 +149,12 @@ async def test_update_document_indexed_by_bson_object_id_casts_input_oid(mock_cl
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    mock_entry = mock.MagicMock()
+    mock_entry = {"field1": 1, "field2": 2}
 
     await conn.update_document(mock_model, oid, mock_entry)
 
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    modify = {"$set": mock_entry.dict.return_value}
+    modify = {"$set": mock_entry}
     mock_update.assert_awaited_once_with({"_id": PyObjectId(oid)}, modify, return_document=True)
 
 
@@ -173,12 +171,12 @@ async def test_update_document_indexed_by_different_type_does_not_cast_input_oid
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    mock_entry = mock.MagicMock()
+    mock_entry = {"field1": 1, "field2": 2}
 
     await conn.update_document(mock_model, oid, mock_entry)
 
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    modify = {"$set": mock_entry.dict.return_value}
+    modify = {"$set": mock_entry}
     mock_update.assert_awaited_once_with({"_id": oid}, modify, return_document=True)
 
 
@@ -195,7 +193,7 @@ async def test_update_document_fails_if_document_not_found(mock_client):
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    mock_entry = mock.MagicMock()
+    mock_entry = {"field1": 1, "field2": 2}
 
     with pytest.raises(DocumentNotFound, match=oid):
         await conn.update_document(mock_model, oid, mock_entry)

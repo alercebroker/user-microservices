@@ -22,7 +22,7 @@ def test_put_ignores_fields_not_defined_in_schema(mock_connection):
     response = utils.client.put(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 200
     # Additional fields -> _id and date
-    to_modify = ReportUpdate(**{k: v for k, v in report.items() if k not in {"_id", "date"}})
+    to_modify = {k: v for k, v in report.items() if k not in {"_id", "date"}}
     update_document.assert_awaited_once_with(Report, str(oid), to_modify)
 
 
