@@ -14,6 +14,7 @@ jobs:
     with:
       package: query
       prefix: libs/
+      integration: false
   db-library:
     needs: detect-changes
     if: needs.detect-changes.outputs.db-lib == 'true'

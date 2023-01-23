@@ -9,6 +9,10 @@ on:
         required: false
         type: string
         default: ""
+      integration:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   lint-and-test:
@@ -32,7 +36,17 @@ jobs:
         run: |
           cd ${{ inputs.prefix }}${{ inputs.package }}
           poetry run black --verbose --check ${{ inputs.package }}
-      - name: Test with pytest
+      - name: Unittest with pytest
         run: |
           cd ${{ inputs.prefix }}${{ inputs.package }}
-          poetry run pytest
+          poetry run pytest tests/unittests --cov ${{ inputs.package }} --cov-report xml
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: ${{ inputs.prefix }}${{ inputs.package }}/coverage.xml
+          flags: ${{ inputs.package }}
+      - name: Integration tests with pytest
+        if: ${{ inputs.integration }} == true
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry run pytest tests/integration
