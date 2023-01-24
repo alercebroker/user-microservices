@@ -8,6 +8,8 @@ from ._base import PaginatedModel
 
 
 class _PyObjectIdSchema(PyObjectId):
+    """Needed for API docs to properly display the schema"""
+
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(type="string")
