@@ -7,10 +7,16 @@ from ..database import models
 from ._base import PaginatedModel
 
 
+class _PyObjectIdSchema(PyObjectId):
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
+
+
 class ReportOut(models.Report, metaclass=SchemaMetaclass):
     """Schema for individual reports"""
 
-    id: PyObjectId = Field(..., description="Unique identifier in DB", alias="_id")
+    id: _PyObjectIdSchema = Field(..., description="Unique identifier in DB", alias="_id")
     date: datetime = Field(..., description="Date and time of creation (UTC)")
 
     class Config:
