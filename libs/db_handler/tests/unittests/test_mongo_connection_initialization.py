@@ -96,3 +96,11 @@ async def test_connection_closing(mock_client):
 
     assert conn._client is None
     mock_client.return_value.close.assert_called_once()
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_connection_using_async_context_manager(mock_client):
+    async with MongoConnection(input_settings) as conn:
+        assert conn._client == mock_client.return_value
+    assert conn._client is None

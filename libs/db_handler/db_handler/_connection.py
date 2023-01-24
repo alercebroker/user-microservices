@@ -56,6 +56,13 @@ class MongoConnection:
         self._client.close()
         self._client = None
 
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
     async def create_db(self):
         for cls in ModelMetaclass.__models__:
             if cls.__indexes__:
