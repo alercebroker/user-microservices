@@ -39,7 +39,7 @@ jobs:
       - name: Unittest with pytest
         run: |
           cd ${{ inputs.prefix }}${{ inputs.package }}
-          poetry run pytest tests/unittests --cov ${{ inputs.package }} --cov-report xml
+          poetry run pytest -x tests/unittests --cov ${{ inputs.package }} --cov-report xml
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -49,4 +49,4 @@ jobs:
         if: ${{ inputs.integration }}
         run: |
           cd ${{ inputs.prefix }}${{ inputs.package }}
-          poetry run pytest tests/integration
+          poetry run pytest -x tests/integration
