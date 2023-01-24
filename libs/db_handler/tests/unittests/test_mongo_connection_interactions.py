@@ -46,6 +46,18 @@ async def test_create_db_for_collection_without_indexes(mock_client, mock_model_
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_drop_db(mock_client):
+    conn, mock_db = await utils.get_connection_and_db(mock_client)
+    conn._client.drop_database = mock.AsyncMock()
+
+    await conn.drop_db()
+
+    conn._client.drop_database.assert_awaited_once_with(mock_db)
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
 async def test_create_document_by_alias(mock_client):
     conn, mock_db = await utils.get_connection_and_db(mock_client)
     mock_db.__getitem__.return_value.insert_one = mock.AsyncMock()
