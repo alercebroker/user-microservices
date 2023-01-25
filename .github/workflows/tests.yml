@@ -1,0 +1,30 @@
+name: Run tests
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  detect-changes:
+    uses: ./.github/workflows/detect-changes.yml
+  query-library:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.query-lib == 'true'
+    uses: ./.github/workflows/test-template.yml
+    with:
+      package: query
+      prefix: libs/
+      integration: false
+  db-library:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.db-lib == 'true'
+    uses: ./.github/workflows/test-template.yml
+    with:
+      package: db_handler
+      prefix: libs/
+  reports-api:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reports-api == 'true'
+    uses: ./.github/workflows/test-template.yml
+    with:
+      package: reports

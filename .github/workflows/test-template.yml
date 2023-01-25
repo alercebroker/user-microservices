@@ -1,0 +1,52 @@
+name: Template for test running
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+      prefix:
+        required: false
+        type: string
+        default: ""
+      integration:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '1.3.1'
+      - name: Install dependencies
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry --no-root install
+      - name: Lint with black
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry run black --verbose --check ${{ inputs.package }}
+      - name: Unittest with pytest
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry run pytest -x tests/unittests --cov ${{ inputs.package }} --cov-report xml
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ inputs.prefix }}${{ inputs.package }}/coverage.xml
+          flags: ${{ inputs.package }}
+      - name: Integration tests with pytest
+        if: ${{ inputs.integration }}
+        run: |
+          cd ${{ inputs.prefix }}${{ inputs.package }}
+          poetry run pytest -x tests/integration
