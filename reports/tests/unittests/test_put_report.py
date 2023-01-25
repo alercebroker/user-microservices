@@ -5,7 +5,6 @@ from db_handler import DocumentNotFound
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
 from reports.database.models import Report
-from reports.schemas import ReportUpdate
 from .. import utils
 
 oid = utils.random_oid()

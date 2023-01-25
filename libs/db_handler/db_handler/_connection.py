@@ -6,7 +6,7 @@ from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from query import BaseQuery, BasePaginatedQuery
 
-from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
+from ._utils import ModelMetaclass, PyObjectId
 
 
 class _MongoConfig(UserDict):

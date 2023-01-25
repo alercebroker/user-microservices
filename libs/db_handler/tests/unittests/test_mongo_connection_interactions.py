@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from db_handler import PyObjectId, DocumentNotFound
+from db_handler import PyObjectId
 from .. import utils
 
 
