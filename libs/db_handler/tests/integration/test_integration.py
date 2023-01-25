@@ -193,7 +193,7 @@ async def test_read_document_list_with_elements(connection):
     await db["table"].insert_many([{"field1": _} for _ in range(30)])
 
     q = MockQuery(min_field=15)
-    actual = await connection.read_multiple_documents(MockDocument, q)
+    actual = await connection.read_documents(MockDocument, q)
 
     assert actual == [_ async for _ in db["table"].find({"field1": {"$gte": 15}})]
 
@@ -205,51 +205,18 @@ async def test_read_document_list_without_elements(connection):
     await db["table"].insert_many([{"field1": _} for _ in range(30)])
 
     q = MockQuery(min_field=31)
-    actual = await connection.read_multiple_documents(MockDocument, q)
+    actual = await connection.read_documents(MockDocument, q)
 
     assert actual == []
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
-async def test_read_paginated_documents_first_page(connection):
+async def test_read_paginated_documents_with_elements(connection):
     db = connection.db
     await db["table"].insert_many([{"field1": _} for _ in range(30)])
 
     q = MockPaginatedQuery(min_field=15, page_size=5, direction=1)
-    actual = await connection.read_paginated_documents(MockDocument, q)
+    actual = await connection.paginate_documents(MockDocument, q)
 
-    assert actual["count"] == 15
-    assert actual["next"] == 2
-    assert actual["previous"] is None
-    assert actual["results"] == [_ async for _ in db["table"].find({"field1": {"$gte": 15}}).limit(5)]
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("mongo_service")
-async def test_read_paginated_documents_middle_page(connection):
-    db = connection.db
-    await db["table"].insert_many([{"field1": _} for _ in range(30)])
-
-    q = MockPaginatedQuery(min_field=15, page_size=5, page=2, direction=1)
-    actual = await connection.read_paginated_documents(MockDocument, q)
-
-    assert actual["count"] == 15
-    assert actual["next"] == 3
-    assert actual["previous"] == 1
-    assert actual["results"] == [_ async for _ in db["table"].find({"field1": {"$gte": 15}}).skip(5).limit(5)]
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("mongo_service")
-async def test_read_paginated_documents_last_page(connection):
-    db = connection.db
-    await db["table"].insert_many([{"field1": _} for _ in range(30)])
-
-    q = MockPaginatedQuery(min_field=15, page_size=5, page=3, direction=1)
-    actual = await connection.read_paginated_documents(MockDocument, q)
-
-    assert actual["count"] == 15
-    assert actual["next"] is None
-    assert actual["previous"] == 2
-    assert actual["results"] == [_ async for _ in db["table"].find({"field1": {"$gte": 15}}).skip(10).limit(5)]
+    assert actual == [_ async for _ in db["table"].find({"field1": {"$gte": 15}}).limit(5)]

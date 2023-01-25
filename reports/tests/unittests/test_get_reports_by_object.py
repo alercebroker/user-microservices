@@ -29,18 +29,15 @@ def test_query_pipeline_count_includes_grouping_by_object_stage():
 
 @mock.patch('reports.routes.database.get_connection')
 def test_read_report_by_object_empty_list(mock_connection):
-    paginate = mock.AsyncMock()
-    mock_connection.return_value.read_paginated_documents = paginate
-    paginate.return_value = {
-        "count": 0,
-        "previous": None,
-        "next": None,
-        "results": []
-    }
+    count, paginate = mock.AsyncMock(), mock.AsyncMock()
+    mock_connection.return_value.count_documents = count
+    mock_connection.return_value.paginate_documents = paginate
+    count.return_value = 0
+    paginate.return_value = []
 
     response = utils.client.get(endpoint)
     assert response.status_code == 200
-    assert response.json() == paginate.return_value
+    assert response.json() == {"count": 0, "next": None, "previous": None, "results": paginate.return_value}
 
 
 def test_read_report_by_object_list_fails_if_order_by_is_unknown():
@@ -65,9 +62,9 @@ def test_read_report_by_object_list_fails_if_page_size_is_less_than_one():
 
 @mock.patch('reports.routes.database.get_connection')
 def test_read_report_by_object_list_fails_if_database_is_down(mock_connection):
-    paginate = mock.AsyncMock()
-    mock_connection.return_value.read_paginated_documents = paginate
-    paginate.side_effect = ServerSelectionTimeoutError()
+    count = mock.AsyncMock()
+    mock_connection.return_value.count_documents = count
+    count.side_effect = ServerSelectionTimeoutError()
 
     response = utils.client.get(endpoint)
     assert response.status_code == 503

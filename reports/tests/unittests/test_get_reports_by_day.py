@@ -28,7 +28,7 @@ def test_query_pipeline_count_includes_grouping_by_day_stage():
 @mock.patch('reports.routes.database.get_connection')
 def test_read_report_by_day_empty_list(mock_connection):
     paginate = mock.AsyncMock()
-    mock_connection.return_value.read_multiple_documents = paginate
+    mock_connection.return_value.read_documents = paginate
     paginate.return_value = []
 
     response = utils.client.get(endpoint)
@@ -49,7 +49,7 @@ def test_read_report_by_day_list_fails_if_direction_is_unknown():
 @mock.patch('reports.routes.database.get_connection')
 def test_read_report_by_day_list_fails_if_database_is_down(mock_connection):
     paginate = mock.AsyncMock()
-    mock_connection.return_value.read_multiple_documents = paginate
+    mock_connection.return_value.read_documents = paginate
     paginate.side_effect = ServerSelectionTimeoutError()
 
     response = utils.client.get(endpoint)

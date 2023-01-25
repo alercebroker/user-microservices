@@ -22,7 +22,7 @@ async def test_create_db_for_collection_with_indexes(mock_client, mock_model_met
     await conn.create_db()
 
     mock_db.__getitem__.assert_called_once_with(mock_model.__tablename__)
-    mock_db.__getitem__.return_value.create_indexes.assert_awaited_once_with(mock_model.__indexes__)
+    mock_db.__getitem__.return_value.create_indexes.assert_called_once_with(mock_model.__indexes__)
 
 
 @pytest.mark.asyncio
@@ -40,7 +40,7 @@ async def test_create_db_for_collection_without_indexes(mock_client, mock_model_
 
     await conn.create_db()
 
-    mock_db.__getitem__.return_value.create_indexes.assert_not_awaited()
+    mock_db.__getitem__.return_value.create_indexes.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -52,7 +52,7 @@ async def test_drop_db(mock_client):
 
     await conn.drop_db()
 
-    conn._client.drop_database.assert_awaited_once_with(mock_db)
+    conn._client.drop_database.assert_called_once_with(mock_db)
 
 
 @pytest.mark.asyncio
@@ -326,7 +326,7 @@ async def test_read_document_list(mock_client):
 
     mock_query = mock.MagicMock()
 
-    docs = await conn.read_multiple_documents(mock_model, mock_query)
+    docs = await conn.read_documents(mock_model, mock_query)
 
     assert docs == async_for.__aiter__.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
@@ -353,18 +353,18 @@ async def test_pagination_for_empty_results(mock_client):
     conn.count_documents = mock.AsyncMock()
     conn.count_documents.return_value = 0
 
-    paginated = await conn.read_paginated_documents(mock_model, mock_query)
+    paginated = await conn.paginate_documents(mock_model, mock_query)
 
-    assert paginated == {"count": 0, "next": None, "previous": None, "results": to_list.return_value}
+    assert paginated == to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_awaited_once_with(mock_query.limit)
+    to_list.assert_called_once_with(mock_query.limit)
 
 
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_pagination_first_page(mock_client):
+async def test_pagination_with_results(mock_client):
     conn, mock_db = await utils.get_connection_and_db(mock_client)
 
     to_list = mock.AsyncMock()
@@ -381,65 +381,9 @@ async def test_pagination_first_page(mock_client):
     conn.count_documents = mock.AsyncMock()
     conn.count_documents.return_value = 30
 
-    paginated = await conn.read_paginated_documents(mock_model, mock_query)
+    paginated = await conn.paginate_documents(mock_model, mock_query)
 
-    assert paginated == {"count": 30, "next": 2, "previous": None, "results": to_list.return_value}
+    assert paginated == to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_awaited_once_with(mock_query.limit)
-
-
-@pytest.mark.asyncio
-@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
-@mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_pagination_middle_page(mock_client):
-    conn, mock_db = await utils.get_connection_and_db(mock_client)
-
-    to_list = mock.AsyncMock()
-    mock_db.__getitem__.return_value.aggregate.return_value.to_list = to_list
-
-    mock_model = mock.MagicMock()
-    mock_model.__tablename__ = "tablename"
-
-    mock_query = mock.MagicMock()
-    mock_query.page = 2
-    mock_query.limit = 10
-    mock_query.skip = (mock_query.page - 1) * mock_query.limit
-
-    conn.count_documents = mock.AsyncMock()
-    conn.count_documents.return_value = 30
-
-    paginated = await conn.read_paginated_documents(mock_model, mock_query)
-
-    assert paginated == {"count": 30, "next": 3, "previous": 1, "results": to_list.return_value}
-    mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_awaited_once_with(mock_query.limit)
-
-
-@pytest.mark.asyncio
-@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
-@mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_pagination_last_page(mock_client):
-    conn, mock_db = await utils.get_connection_and_db(mock_client)
-
-    to_list = mock.AsyncMock()
-    mock_db.__getitem__.return_value.aggregate.return_value.to_list = to_list
-
-    mock_model = mock.MagicMock()
-    mock_model.__tablename__ = "tablename"
-
-    mock_query = mock.MagicMock()
-    mock_query.page = 3
-    mock_query.limit = 10
-    mock_query.skip = (mock_query.page - 1) * mock_query.limit
-
-    conn.count_documents = mock.AsyncMock()
-    conn.count_documents.return_value = 30
-
-    paginated = await conn.read_paginated_documents(mock_model, mock_query)
-
-    assert paginated == {"count": 30, "next": None, "previous": 2, "results": to_list.return_value}
-    mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_awaited_once_with(mock_query.limit)
+    to_list.assert_called_once_with(mock_query.limit)

@@ -14,19 +14,35 @@ root = APIRouter()
 @root.get("/", response_model=schemas.PaginatedReports)
 async def get_report_list(q: filters.QueryByReport = Depends()):
     """Query reports"""
-    return await database.get_connection().read_paginated_documents(models.Report, q)
+    total = await database.get_connection().count_documents(models.Report, q)
+    results = database.get_connection().paginate_documents(models.Report, q)
+
+    return {
+        "count": total,
+        "next": q.page + 1 if q.skip + q.limit < total else None,
+        "previous": q.page - 1 if q.page > 1 else None,
+        "results": await results,
+    }
 
 
 @root.get("/by_object", response_model=schemas.PaginatedReportsByObject)
 async def get_report_list_by_object(q: filters.QueryByObject = Depends()):
     """Query reports grouped by object"""
-    return await database.get_connection().read_paginated_documents(models.Report, q)
+    total = await database.get_connection().count_documents(models.Report, q)
+    results = database.get_connection().paginate_documents(models.Report, q)
+
+    return {
+        "count": total,
+        "next": q.page + 1 if q.skip + q.limit < total else None,
+        "previous": q.page - 1 if q.page > 1 else None,
+        "results": await results,
+    }
 
 
 @root.get("/csv_reports", response_class=StreamingResponse)
 async def get_reports_as_csv(q: filters.QueryByObject = Depends()):
     """Query reports grouped by object"""
-    reports = await database.get_connection().read_paginated_documents(models.Report, q)
+    reports = await database.get_connection().paginate_documents(models.Report, q)
     reports = pd.DataFrame(reports["results"]).drop(columns="users").set_index("object")
     reports["first_date"].map(lambda x: x.isoformat(timespec="milliseconds"))
     reports["last_date"].map(lambda x: x.isoformat(timespec="milliseconds"))
@@ -48,7 +64,7 @@ async def get_reports_as_csv(q: filters.QueryByObject = Depends()):
 @root.get("/count_by_day", response_model=list[schemas.ReportByDay])
 async def count_reports_by_day(q: filters.QueryByDay = Depends()):
     """Query number of reports per day"""
-    return await database.get_connection().read_multiple_documents(models.Report, q)
+    return await database.get_connection().read_documents(models.Report, q)
 
 
 @root.post("/", response_model=schemas.ReportOut, status_code=201)

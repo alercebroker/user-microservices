@@ -1,6 +1,7 @@
 from collections import UserDict
 from typing import Any
 
+from asyncio import Future
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from query import BaseQuery, BasePaginatedQuery
@@ -116,15 +117,8 @@ class MongoConnection:
             return 0
         return total["total"]
 
-    async def read_multiple_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
+    async def read_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
         return [_ async for _ in self.db[model.__tablename__].aggregate(q.pipeline())]
 
-    async def read_paginated_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> dict:
-        total = await self.count_documents(model, q)
-        results = await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)
-        return {
-            "count": total,
-            "next": q.page + 1 if q.skip + q.limit < total else None,
-            "previous": q.page - 1 if q.page > 1 else None,
-            "results": results,
-        }
+    def paginate_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> Future:
+        return self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)
