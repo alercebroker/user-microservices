@@ -9,17 +9,20 @@ from .. import utils
 endpoint = "/count_by_day"
 
 
-def test_query_pipeline_includes_grouping_stage():
+def test_query_pipeline_includes_grouping_by_day_stage():
     pipeline = QueryByDay().pipeline()
-    group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}
 
-    pipeline = [stage for stage in pipeline if "$group" in stage or "$set" in stage]
+    assert "$sort" in pipeline[-1]
+    assert pipeline[-2]["$project"]["day"] == "$_id"
+    assert pipeline[-3]["$group"]["_id"] == {"$dateTrunc": {"date": "$date", "unit": "day"}}
 
-    assert any("$group" in stage for stage in pipeline)
-    assert any("$set" in stage for stage in pipeline)
 
-    assert pipeline[0] == {"$group": group}
-    assert pipeline[1] == {"$set": {"day": "$_id"}}
+def test_query_pipeline_count_includes_grouping_by_day_stage():
+    pipeline = QueryByDay().count_pipeline()
+
+    assert "$count" in pipeline[-1]
+    assert pipeline[-2]["$project"]["day"] == "$_id"
+    assert pipeline[-3]["$group"]["_id"] == {"$dateTrunc": {"date": "$date", "unit": "day"}}
 
 
 @mock.patch('reports.routes.database.get_connection')

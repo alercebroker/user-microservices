@@ -9,25 +9,22 @@ from .. import utils
 endpoint = "/by_object"
 
 
-def test_query_pipeline_includes_grouping_stage():
+def test_query_pipeline_includes_grouping_by_object_stage():
     pipeline = QueryByObject().pipeline()
-    group = {
-            "_id": "$object",
-            "first_date": {"$min": "$date"},
-            "last_date": {"$max": "$date"},
-            "users": {"$addToSet": "$owner"},
-            "source": {"$addToSet": "$source"},
-            "report_type": {"$addToSet": "$report_type"},
-            "count": {"$count": {}},
-        }
 
-    pipeline = [stage for stage in pipeline if "$group" in stage or "$set" in stage]
+    assert "$limit" in pipeline[-1]
+    assert "$skip" in pipeline[-2]
+    assert "$sort" in pipeline[-3]
+    assert pipeline[-4]["$project"]["object"] == "$_id"
+    assert pipeline[-5]["$group"]["_id"] == "$object"
 
-    assert any("$group" in stage for stage in pipeline)
-    assert any("$set" in stage for stage in pipeline)
 
-    assert pipeline[0] == {"$group": group}
-    assert pipeline[1] == {"$set": {"object": "$_id"}}
+def test_query_pipeline_count_includes_grouping_by_object_stage():
+    pipeline = QueryByObject().count_pipeline()
+
+    assert "$count" in pipeline[-1]
+    assert pipeline[-2]["$project"]["object"] == "$_id"
+    assert pipeline[-3]["$group"]["_id"] == "$object"
 
 
 @mock.patch('reports.routes.database.get_connection')
