@@ -1,4 +1,8 @@
+import httpx
+import pandas as pd
+from astropy.time import Time
 from fastapi import APIRouter, Body, Depends
+from fastapi.responses import StreamingResponse
 
 from . import database, filters, schemas
 from .database import models
@@ -17,6 +21,28 @@ async def get_report_list(q: filters.QueryByReport = Depends()):
 async def get_report_list_by_object(q: filters.QueryByObject = Depends()):
     """Query reports grouped by object"""
     return await database.get_connection().read_paginated_documents(models.Report, q)
+
+
+@root.get("/csv_reports", response_class=StreamingResponse)
+async def get_reports_as_csv(q: filters.QueryByObject = Depends()):
+    """Query reports grouped by object"""
+    reports = await database.get_connection().read_paginated_documents(models.Report, q)
+    reports = pd.DataFrame(reports["results"]).drop(columns="users").set_index("object")
+    reports["first_date"].map(lambda x: x.isoformat(timespec="milliseconds"))
+    reports["last_date"].map(lambda x: x.isoformat(timespec="milliseconds"))
+
+    url = "https://api.alerce.online/alerts/v1/objects"
+    with httpx.Client() as client:
+        objects = client.get(url, params={"oid": reports.index.to_list(), "page_size": q.page_size})
+    objects = pd.DataFrame(objects.json()["items"])[["oid", "ndet", "firstmjd", "lastmjd"]]
+    objects["firstmjd"] = Time(objects["firstmjd"], format="mjd").to_value("isot")
+    objects["lastmjd"] = Time(objects["lastmjd"], format="mjd").to_value("isot")
+
+    mapping = {"oid": "object", "firstmjd": "first_detection", "lastmjd": "last_detection", "ndet": "nobs"}
+    objects = objects.rename(columns=mapping).set_index("object")
+
+    headers = {"Content-Disposition": f"attachment; filename=data.csv"}
+    return StreamingResponse(iter(objects.join(reports).to_csv()), media_type="text/csv", headers=headers)
 
 
 @root.get("/count_by_day", response_model=list[schemas.ReportByDay])
