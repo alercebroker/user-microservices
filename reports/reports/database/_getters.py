@@ -2,12 +2,7 @@ from functools import lru_cache
 
 from db_handler import MongoConnection
 
-from ..settings import MongoSettings
-
-
-@lru_cache
-def get_settings() -> MongoSettings:
-    return MongoSettings()
+from ..settings import get_settings
 
 
 @lru_cache
