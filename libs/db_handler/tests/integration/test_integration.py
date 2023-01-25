@@ -5,7 +5,7 @@ from pydantic.error_wrappers import ValidationError
 from pymongo import IndexModel
 from query import BaseQuery, BasePaginatedQuery, QueryRecipe
 
-from db_handler import MongoConnection, ModelMetaclass, PyObjectId, DocumentNotFound
+from db_handler import MongoConnection, ModelMetaclass, PyObjectId
 
 
 settings = {
@@ -106,9 +106,8 @@ async def test_read_document(connection):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
-async def test_read_non_existent_document_fails(connection):
-    with pytest.raises(DocumentNotFound, match=oid):
-        await connection.read_document(MockDocument, oid)
+async def test_read_non_existent_document_returns_none(connection):
+    assert await connection.read_document(MockDocument, oid) is None
 
     db = connection.db
     expected = await db["table"].find_one({"_id": PyObjectId(oid)})
@@ -130,9 +129,8 @@ async def test_update_document(connection):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
-async def test_update_non_existent_document_fails(connection):
-    with pytest.raises(DocumentNotFound, match=oid):
-        await connection.update_document(MockDocument, oid, {"field2": -1})
+async def test_update_non_existent_document_returns_none(connection):
+    assert await connection.update_document(MockDocument, oid, {"field2": -1}) is None
 
     db = connection.db
     expected = await db["table"].find_one({"_id": PyObjectId(oid)})
@@ -153,9 +151,8 @@ async def test_delete_document(connection):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mongo_service")
-async def test_delete_non_existent_document_fails(connection):
-    with pytest.raises(DocumentNotFound, match=oid):
-        await connection.delete_document(MockDocument, oid)
+async def test_delete_non_existent_document_returns_none(connection):
+    assert await connection.delete_document(MockDocument, oid) is None
 
     db = connection.db
     expected = await db["table"].find_one({"_id": PyObjectId(oid)})

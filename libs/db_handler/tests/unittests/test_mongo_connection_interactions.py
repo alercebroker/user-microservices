@@ -78,26 +78,6 @@ async def test_create_document_by_alias(mock_client):
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_create_document_by_field(mock_client):
-    conn, mock_db = await utils.get_connection_and_db(mock_client)
-    mock_db.__getitem__.return_value.insert_one = mock.AsyncMock()
-
-    mock_model = mock.MagicMock()
-    mock_model.__tablename__ = "tablename"
-
-    mock_entry = {"field1": 1, "field2": 2}
-
-    await conn.create_document(mock_model, mock_entry, by_alias=False)
-
-    mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    mock_db.__getitem__.return_value.insert_one.assert_awaited_once_with(mock_model.return_value.dict.return_value)
-    mock_model.assert_called_once_with(**mock_entry)
-    mock_model.return_value.dict.assert_called_once_with(by_alias=False)
-
-
-@pytest.mark.asyncio
-@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
-@mock.patch('db_handler._connection.AsyncIOMotorClient')
 async def test_read_document_indexed_by_bson_object_id_casts_input_oid(mock_client):
     oid = "123456789012345678901234"
 
@@ -134,7 +114,7 @@ async def test_read_document_indexed_by_different_type_does_not_cast_input_oid(m
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_read_document_fails_if_document_not_found(mock_client):
+async def test_read_document_returns_none_if_document_not_found(mock_client):
     oid = "plain_oid"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
@@ -144,8 +124,7 @@ async def test_read_document_fails_if_document_not_found(mock_client):
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    with pytest.raises(DocumentNotFound, match=oid):
-        await conn.read_document(mock_model, oid)
+    assert await conn.read_document(mock_model, oid) is None
 
 
 @pytest.mark.asyncio
@@ -195,7 +174,7 @@ async def test_update_document_indexed_by_different_type_does_not_cast_input_oid
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_update_document_fails_if_document_not_found(mock_client):
+async def test_update_document_returns_none_if_document_not_found(mock_client):
     oid = "plain_oid"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
@@ -207,8 +186,7 @@ async def test_update_document_fails_if_document_not_found(mock_client):
 
     mock_entry = {"field1": 1, "field2": 2}
 
-    with pytest.raises(DocumentNotFound, match=oid):
-        await conn.update_document(mock_model, oid, mock_entry)
+    assert await conn.update_document(mock_model, oid, mock_entry) is None
 
 
 @pytest.mark.asyncio
@@ -218,7 +196,7 @@ async def test_delete_document_indexed_by_bson_object_id_casts_input_oid(mock_cl
     oid = "123456789012345678901234"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
-    mock_db.__getitem__.return_value.delete_one = mock.AsyncMock()
+    mock_db.__getitem__.return_value.find_one_and_delete = mock.AsyncMock()
 
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
@@ -226,7 +204,7 @@ async def test_delete_document_indexed_by_bson_object_id_casts_input_oid(mock_cl
     await conn.delete_document(mock_model, oid)
 
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    mock_db.__getitem__.return_value.delete_one.assert_awaited_once_with({"_id": PyObjectId(oid)})
+    mock_db.__getitem__.return_value.find_one_and_delete.assert_awaited_once_with({"_id": PyObjectId(oid)})
 
 
 @pytest.mark.asyncio
@@ -236,7 +214,7 @@ async def test_delete_document_indexed_by_different_type_does_not_cast_input_oid
     oid = "plain_oid"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
-    mock_db.__getitem__.return_value.delete_one = mock.AsyncMock()
+    mock_db.__getitem__.return_value.find_one_and_delete = mock.AsyncMock()
 
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
@@ -244,7 +222,7 @@ async def test_delete_document_indexed_by_different_type_does_not_cast_input_oid
     await conn.delete_document(mock_model, oid)
 
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
-    mock_db.__getitem__.return_value.delete_one.assert_awaited_once_with({"_id": oid})
+    mock_db.__getitem__.return_value.find_one_and_delete.assert_awaited_once_with({"_id": oid})
 
 
 @pytest.mark.asyncio
@@ -254,15 +232,13 @@ async def test_delete_document_fails_if_document_not_found(mock_client):
     oid = "plain_oid"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
-    mock_db.__getitem__.return_value.delete_one = mock.AsyncMock()
-    mock_db.__getitem__.return_value.delete_one.return_value = mock.MagicMock()
-    mock_db.__getitem__.return_value.delete_one.return_value.deleted_count = 0
+    mock_db.__getitem__.return_value.find_one_and_delete = mock.AsyncMock()
+    mock_db.__getitem__.return_value.find_one_and_delete.return_value = None
 
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    with pytest.raises(DocumentNotFound, match=oid):
-        await conn.delete_document(mock_model, oid)
+    assert await conn.delete_document(mock_model, oid) is None
 
 
 @pytest.mark.asyncio
@@ -358,7 +334,7 @@ async def test_pagination_for_empty_results(mock_client):
     assert paginated == to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_called_once_with(mock_query.limit)
+    to_list.assert_awaited_once_with(mock_query.limit)
 
 
 @pytest.mark.asyncio
@@ -386,4 +362,4 @@ async def test_pagination_with_results(mock_client):
     assert paginated == to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_called_once_with(mock_query.limit)
+    to_list.assert_awaited_once_with(mock_query.limit)

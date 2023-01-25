@@ -72,40 +72,31 @@ class MongoConnection:
     async def drop_db(self):
         await self._client.drop_database(self.db)
 
-    async def create_document(self, model: ModelMetaclass, document: dict, by_alias: bool = True) -> dict:
+    @staticmethod
+    def _parse_oid(oid):
+        try:
+            return PyObjectId(oid)
+        except InvalidId:
+            return oid
+
+    async def create_document(self, model: ModelMetaclass, document: dict) -> dict:
         """Fields in `document` not defined in `model` will be quietly ignored"""
-        document = model(**document).dict(by_alias=by_alias)
+        document = model(**document).dict(by_alias=True)
         await self.db[model.__tablename__].insert_one(document)
         return document
 
-    async def read_document(self, model: ModelMetaclass, oid: str) -> dict:
-        try:
-            document = await self.db[model.__tablename__].find_one({"_id": PyObjectId(oid)})
-        except InvalidId:  # Second attempt if _id is not a BSON ObjectId
-            document = await self.db[model.__tablename__].find_one({"_id": oid})
-        if document is None:
-            raise DocumentNotFound(oid)
-        return document
+    def read_document(self, model: ModelMetaclass, oid: str) -> Future:
+        oid = self._parse_oid(oid)
+        return self.db[model.__tablename__].find_one({"_id": oid})
 
-    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict:
+    def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> Future:
         """Will quietly work even if `update` includes fields not defined in `model`"""
-        try:
-            match = {"_id": PyObjectId(oid)}
-        except InvalidId:
-            match = {"_id": oid}
-        update = {"$set": update}
-        document = await self.db[model.__tablename__].find_one_and_update(match, update, return_document=True)
-        if document is None:
-            raise DocumentNotFound(oid)
-        return document
+        oid = self._parse_oid(oid)
+        return self.db[model.__tablename__].find_one_and_update({"_id": oid}, {"$set": update}, return_document=True)
 
-    async def delete_document(self, model: ModelMetaclass, oid: str):
-        try:
-            delete = await self.db[model.__tablename__].delete_one({"_id": PyObjectId(oid)})
-        except InvalidId:
-            delete = await self.db[model.__tablename__].delete_one({"_id": oid})
-        if delete.deleted_count == 0:
-            raise DocumentNotFound(oid)
+    def delete_document(self, model: ModelMetaclass, oid: str) -> Future:
+        oid = self._parse_oid(oid)
+        return self.db[model.__tablename__].find_one_and_delete({"_id": oid})
 
     async def count_documents(self, model: ModelMetaclass, q: BaseQuery) -> int:
         try:

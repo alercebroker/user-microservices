@@ -1,6 +1,7 @@
 import httpx
 import pandas as pd
 from astropy.time import Time
+from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
 
@@ -9,6 +10,12 @@ from .database import models
 
 
 root = APIRouter()
+
+
+def _check_exists(document, oid):
+    if document is None:
+        raise DocumentNotFound(oid)
+    return document
 
 
 @root.get("/", response_model=schemas.PaginatedReports)
@@ -76,22 +83,26 @@ async def create_new_report(report: schemas.ReportIn = Body(...)):
 @root.get("/{report_id}", response_model=schemas.ReportOut)
 async def get_single_report(report_id: str):
     """Retrieve single report based on its ID"""
-    return await database.get_connection().read_document(models.Report, report_id)
+    document = await database.get_connection().read_document(models.Report, report_id)
+    return _check_exists(document, report_id)
 
 
 @root.patch("/{report_id}", response_model=schemas.ReportOut)
 async def update_existing_report(report_id: str, report: schemas.ReportUpdate = Body(...)):
     """Updates one or more fields of an existing report based on its ID"""
-    return await database.get_connection().update_document(models.Report, report_id, report.dict(exclude_none=True))
+    document = await database.get_connection().update_document(models.Report, report_id, report.dict(exclude_none=True))
+    return _check_exists(document, report_id)
 
 
 @root.put("/{report_id}", response_model=schemas.ReportOut)
 async def replace_existing_report(report_id: str, report: schemas.ReportIn = Body(...)):
     """Updates the full report based on its ID"""
-    return await database.get_connection().update_document(models.Report, report_id, report.dict())
+    document = await database.get_connection().update_document(models.Report, report_id, report.dict())
+    return _check_exists(document, report_id)
 
 
 @root.delete("/{report_id}", status_code=204)
 async def delete_report(report_id: str):
     """Deletes existing report based on its ID"""
-    await database.get_connection().delete_document(models.Report, report_id)
+    document = await database.get_connection().delete_document(models.Report, report_id)
+    _check_exists(document, report_id)
