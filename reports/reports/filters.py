@@ -25,6 +25,13 @@ class CommonQueries:
         query.QueryRecipe("object", ["$regex"], ["object"]),
     )
 
+    @staticmethod
+    def _rename_id(fields, key):
+        project = {k: True for k in fields if k != "_id"}
+        project[key] = "$_id"
+        project["_id"] = False
+        return project
+
 
 @dataclasses.dataclass
 class QueryByReport(CommonQueries, query.BasePaginatedQuery):
@@ -45,11 +52,9 @@ class QueryByObject(CommonQueries, query.BasePaginatedQuery):
             "first_date": {"$min": "$date"},
             "last_date": {"$max": "$date"},
             "users": {"$addToSet": "$owner"},
-            "source": {"$addToSet": "$source"},
-            "report_type": {"$addToSet": "$report_type"},
             "count": {"$count": {}},
         }
-        return super()._query_pipeline() + [{"$group": group}, {"$set": {"object": "$_id"}}]
+        return super()._query_pipeline() + [{"$group": group}, {"$project": self._rename_id(group, "object")}]
 
 
 @dataclasses.dataclass
@@ -60,4 +65,4 @@ class QueryByDay(CommonQueries, query.BaseSortedQuery):
 
     def _query_pipeline(self) -> list[dict]:
         group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}
-        return super()._query_pipeline() + [{"$group": group}, {"$set": {"day": "$_id"}}]
+        return super()._query_pipeline() + [{"$group": group}, {"$project": self._rename_id(group, "day")}]
