@@ -48,7 +48,7 @@ insert = dict(_id=PyObjectId(oid), field1=1)
 
 @pytest_asyncio.fixture
 async def connection():
-    conn = MongoConnection(settings)
+    conn = MongoConnection(**settings)
     await conn.connect()
     await conn.create_db()
     yield conn
