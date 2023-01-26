@@ -6,12 +6,14 @@ from .. import utils
 
 endpoint = "/"
 
+connection = 'reports.routes.db'
 
-@mock.patch('reports.routes.database.get_connection')
+
+@mock.patch(connection)
 def test_read_report_empty_list(mock_connection):
     count, paginate = mock.AsyncMock(), mock.AsyncMock()
-    mock_connection.return_value.count_documents = count
-    mock_connection.return_value.paginate_documents = paginate
+    mock_connection.count_documents = count
+    mock_connection.paginate_documents = paginate
     count.return_value = 0
     paginate.return_value = []
 
@@ -40,10 +42,10 @@ def test_read_report_list_fails_if_page_size_is_less_than_one():
     assert response.status_code == 422
 
 
-@mock.patch('reports.routes.database.get_connection')
+@mock.patch(connection)
 def test_read_report_list_fails_if_database_is_down(mock_connection):
     count = mock.AsyncMock()
-    mock_connection.return_value.count_documents = count
+    mock_connection.count_documents = count
     count.side_effect = ServerSelectionTimeoutError()
 
     response = utils.client.get(endpoint)

@@ -5,7 +5,7 @@ import pandas as pd
 from astropy.time import Time
 from db_handler import MongoConnection, Singleton
 
-from ..settings import get_connection_settings
+from ..settings import get_settings
 
 
 class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
@@ -30,4 +30,4 @@ class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
         return objects.rename(columns=mapping).set_index("object")
 
 
-db = ReportDatabaseConnection(**get_connection_settings().dict())
+db = ReportDatabaseConnection(**get_settings().dict())

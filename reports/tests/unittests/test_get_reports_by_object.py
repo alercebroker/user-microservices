@@ -8,6 +8,8 @@ from .. import utils
 
 endpoint = "/by_object"
 
+connection = 'reports.routes.db'
+
 
 def test_query_pipeline_includes_grouping_by_object_stage():
     pipeline = QueryByObject().pipeline()
@@ -27,11 +29,11 @@ def test_query_pipeline_count_includes_grouping_by_object_stage():
     assert pipeline[-3]["$group"]["_id"] == "$object"
 
 
-@mock.patch('reports.routes.database.get_connection')
+@mock.patch(connection)
 def test_read_report_by_object_empty_list(mock_connection):
     count, paginate = mock.AsyncMock(), mock.AsyncMock()
-    mock_connection.return_value.count_documents = count
-    mock_connection.return_value.paginate_documents = paginate
+    mock_connection.count_documents = count
+    mock_connection.paginate_documents = paginate
     count.return_value = 0
     paginate.return_value = []
 
@@ -60,10 +62,10 @@ def test_read_report_by_object_list_fails_if_page_size_is_less_than_one():
     assert response.status_code == 422
 
 
-@mock.patch('reports.routes.database.get_connection')
+@mock.patch(connection)
 def test_read_report_by_object_list_fails_if_database_is_down(mock_connection):
     count = mock.AsyncMock()
-    mock_connection.return_value.count_documents = count
+    mock_connection.count_documents = count
     count.side_effect = ServerSelectionTimeoutError()
 
     response = utils.client.get(endpoint)

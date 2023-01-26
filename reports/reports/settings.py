@@ -24,5 +24,5 @@ class ConnectionSettings(BaseSettings):
 
 
 @lru_cache
-def get_connection_settings():
+def get_settings():
     return ConnectionSettings()
