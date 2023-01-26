@@ -2,7 +2,7 @@ import pytest
 
 from .. import utils
 
-endpoint = '/by_object'
+endpoint = '/'
 
 total = 6  # Number of objects in mongo-init.js
 page_size = total // 3

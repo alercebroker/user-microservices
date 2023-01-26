@@ -25,32 +25,31 @@ def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
         dataframe[field].map(lambda x: x.isoformat(timespec="milliseconds"))
 
 
-@root.get("/", response_model=schemas.PaginatedReports)
+def _paginate(total, results, q):
+    return {
+        "count": total,
+        "next": q.page + 1 if q.skip + q.limit < total else None,
+        "previous": q.page - 1 if q.page > 1 else None,
+        "results": results,
+    }
+
+
+@root.get("/query", response_model=schemas.PaginatedReports, include_in_schema=False)
 async def get_report_list(q: filters.QueryByReport = Depends()):
     """Query reports"""
     total = await db.count_documents(models.Report, q)
-    results = db.paginate_documents(models.Report, q)
+    results = await db.paginate_documents(models.Report, q)
 
-    return {
-        "count": total,
-        "next": q.page + 1 if q.skip + q.limit < total else None,
-        "previous": q.page - 1 if q.page > 1 else None,
-        "results": await results,
-    }
+    return _paginate(total, results, q)
 
 
-@root.get("/by_object", response_model=schemas.PaginatedReportsByObject)
+@root.get("/", response_model=schemas.PaginatedReportsByObject)
 async def get_report_list_by_object(q: filters.QueryByObject = Depends()):
     """Query reports grouped by object"""
     total = await db.count_documents(models.Report, q)
-    results = db.paginate_documents(models.Report, q)
+    results = await db.paginate_documents(models.Report, q)
 
-    return {
-        "count": total,
-        "next": q.page + 1 if q.skip + q.limit < total else None,
-        "previous": q.page - 1 if q.page > 1 else None,
-        "results": await results,
-    }
+    return _paginate(total, results, q)
 
 
 @root.get("/csv_reports", response_class=StreamingResponse, responses={200: {"content": {"text/csv": {}}}})

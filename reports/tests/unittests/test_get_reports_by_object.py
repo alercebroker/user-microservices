@@ -6,7 +6,7 @@ from reports.filters import QueryByObject
 from .. import utils
 
 
-endpoint = "/by_object"
+endpoint = "/"
 
 connection = 'reports.routes.db'
 
