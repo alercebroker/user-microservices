@@ -5,13 +5,8 @@ import query
 from fastapi import Query
 from pydantic import dataclasses
 
-from .schemas import ReportOut, ReportByObject, ReportByDay
+from .schemas import ReportOut, ReportByObject, ReportByDay, ReportByUser
 from .utils import REPORT_TYPES
-
-
-reports_fields = query.fields(ReportOut)
-objects_fields = query.fields(ReportByObject, exclude={"users"})
-day_fields = query.fields(ReportByDay)
 
 
 @dataclasses.dataclass
@@ -37,14 +32,14 @@ class CommonQueries:
 class QueryByReport(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return individual reports, directly as they come from the database."""
 
-    order_by: Literal[reports_fields] = Query("date", description="Field to sort by")
+    order_by: Literal[query.fields(ReportOut)] = Query("date", description="Field to sort by")
 
 
 @dataclasses.dataclass
 class QueryByObject(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return reports grouped by object."""
 
-    order_by: Literal[objects_fields] = Query("last_date", description="Field to sort by")
+    order_by: Literal[query.fields(ReportByObject, exclude={"users"})] = Query("last_date", description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
         group = {
@@ -64,10 +59,23 @@ class QueryByObject(CommonQueries, query.BasePaginatedQuery):
 class QueryByDay(CommonQueries, query.BaseSortedQuery):
     """Queries that return number of reports per day."""
 
-    order_by: Literal[day_fields] = Query("day", description="Field to sort by")
+    order_by: Literal[query.fields(ReportByDay)] = Query("day", description="Field to sort by")
 
     def _query_pipeline(self) -> list[dict]:
         group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}
         project = self._project_without_id(group)
         project["day"] = "$_id"
+        return super()._query_pipeline() + [{"$group": group}, {"$project": project}]
+
+
+@dataclasses.dataclass
+class QueryByUser(CommonQueries, query.BaseSortedQuery):
+    """Queries that return number of reports per day."""
+
+    order_by: Literal[query.fields(ReportByUser)] = Query("count", description="Field to sort by")
+
+    def _query_pipeline(self) -> list[dict]:
+        group = {"_id": "$owner", "count": {"$count": {}}}
+        project = self._project_without_id(group)
+        project["user"] = "$_id"
         return super()._query_pipeline() + [{"$group": group}, {"$project": project}]

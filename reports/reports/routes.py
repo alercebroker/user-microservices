@@ -58,6 +58,12 @@ async def count_reports_by_day(q: filters.QueryByDay = Depends()):
     return await db.read_documents(models.Report, q)
 
 
+@root.get("/count_by_user", response_model=list[schemas.ReportByUser], tags=["queries"])
+async def count_reports_by_user(q: filters.QueryByUser = Depends()):
+    """Query number of reports per day"""
+    return await db.read_documents(models.Report, q)
+
+
 @root.get("/csv_reports", response_class=StreamingResponse, responses={200: {"content": {"text/csv": {}}}}, tags=["download"])
 async def download_report_table(q: filters.QueryByObject = Depends()):
     """Downloads a CSV with object and report information"""
