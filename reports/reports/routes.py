@@ -1,9 +1,11 @@
+from datetime import datetime
+
 import pandas as pd
 from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
 
-from . import database, filters, schemas
+from . import filters, schemas
 from .database import db, models
 
 
@@ -60,7 +62,8 @@ async def download_report_selection(q: filters.QueryByObject = Depends()):
 
     objects = db.query_objects(reports.index.to_list())
 
-    headers = {"Content-Disposition": f"attachment; filename=data.csv"}
+    filename = f"{q.type if q.type else 'all'}_{datetime.now():%Y%m%d}.csv"
+    headers = {"Content-Disposition": f"attachment; filename={filename}"}
     return StreamingResponse(iter(reports.join(objects).to_csv()), media_type="text/csv", headers=headers)
 
 
