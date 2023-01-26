@@ -98,3 +98,15 @@ class SchemaMetaclass(ModelMetaclass):
             field.default_factory = None
             field.default = None
         return cls
+
+
+class Singleton(type):
+    def __new__(mcs, *args, **kwargs):
+        cls = super().__new__(mcs, *args, **kwargs)
+        cls._instance = None
+        return cls
+
+    def __call__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__call__(*args, **kwargs)
+        return cls._instance
