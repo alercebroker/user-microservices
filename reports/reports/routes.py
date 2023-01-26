@@ -1,5 +1,3 @@
-from typing import Iterable
-
 import pandas as pd
 from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
@@ -18,7 +16,7 @@ def _check_exists(document: dict | None, oid: str):
     return document
 
 
-def _to_iso(dataframe: pd.DataFrame, fields: Iterable):
+def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
     if isinstance(fields, str):
         fields = [fields]
     for field in fields:
@@ -58,7 +56,7 @@ async def download_report_selection(q: filters.QueryByObject = Depends()):
     """Downloads a CSV with object and report information"""
     reports = await database.get_connection().paginate_documents(models.Report, q)
     reports = pd.DataFrame(reports).drop(columns="users").set_index("object")
-    _to_iso(reports, ["first_date", "last_date"])
+    _datetime_to_iso(reports, ["first_date", "last_date"])
 
     objects = database.get_connection().query_objects(reports.index.to_list())
 
