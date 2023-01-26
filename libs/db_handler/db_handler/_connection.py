@@ -42,8 +42,8 @@ class _MongoConfig(UserDict):
 
 
 class MongoConnection:
-    def __init__(self, config: dict):
-        self._config = _MongoConfig(config)
+    def __init__(self, **kwargs):
+        self._config = _MongoConfig(kwargs)
         self._client = None
 
     @property

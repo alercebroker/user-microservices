@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 from starlette_prometheus import metrics, PrometheusMiddleware
 
-from .database import get_connection
+from .database import db
 from .routes import root
 from . import __version__
 
@@ -25,13 +25,13 @@ app.include_router(root)
 
 @app.on_event("startup")
 async def startup():
-    await get_connection().connect()
-    await get_connection().create_db()
+    await db.connect()
+    await db.create_db()
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    await get_connection().close()
+    await db.close()
 
 
 @app.exception_handler(DuplicateKeyError)

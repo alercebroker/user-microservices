@@ -5,13 +5,13 @@ import pandas as pd
 from astropy.time import Time
 from db_handler import MongoConnection, Singleton
 
-from ..settings import MongoSettings, ExtraSettings
+from ..settings import get_connection_settings
 
 
 class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
-    def __init__(self, db_config, extra_config):
-        self._alerts_url = extra_config.alerts_api_url
-        super().__init__(db_config)
+    def __init__(self, **kwargs):
+        self._alerts_url = kwargs.pop("alerts_api_url")
+        super().__init__(**kwargs.pop("mongodb"))
 
     @staticmethod
     def _mjd_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
@@ -30,6 +30,4 @@ class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
         return objects.rename(columns=mapping).set_index("object")
 
 
-@lru_cache
-def get_connection() -> ReportDatabaseConnection:
-    return ReportDatabaseConnection(MongoSettings().dict(), ExtraSettings())
+db = ReportDatabaseConnection(**get_connection_settings().dict())
