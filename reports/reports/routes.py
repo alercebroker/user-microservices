@@ -53,9 +53,9 @@ async def get_report_list_by_object(q: filters.QueryByObject = Depends()):
     }
 
 
-@root.get("/csv_reports", response_class=StreamingResponse)
-async def get_reports_as_csv(q: filters.QueryByObject = Depends()):
-    """Query reports grouped by object"""
+@root.get("/csv_reports", response_class=StreamingResponse, responses={200: {"content": {"text/csv": {}}}})
+async def download_report_selection(q: filters.QueryByObject = Depends()):
+    """Downloads a CSV with object and report information"""
     reports = await database.get_connection().paginate_documents(models.Report, q)
     reports = pd.DataFrame(reports).drop(columns="users").set_index("object")
     _to_iso(reports, ["first_date", "last_date"])
