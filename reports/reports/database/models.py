@@ -26,6 +26,6 @@ class Report(BaseModel, metaclass=ModelMetaclass):
     object: str = Field(..., description="Reported object ID")
     solved: bool = Field(..., description="Report status")
     source: str = Field(..., description="Service of origin of the report")
-    observation: str = Field(..., description="Class assigned to the object")
+    observation: str = Field(..., description="Commentary on the report")
     report_type: str = Field(..., description="Type of report")
     owner: str = Field(..., description="User who created the report")
