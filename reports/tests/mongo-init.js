@@ -6,7 +6,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user1"
   },
   {
@@ -15,7 +15,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user2"
   },
   {
@@ -24,7 +24,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user1"
   },
   {
@@ -33,7 +33,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type2",
+    report_type: "Bogus",
     owner: "user2"
   },
   {
@@ -42,7 +42,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user3"
   },
   {
@@ -51,7 +51,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type2",
+    report_type: "Bogus",
     owner: "user1"
   },
   {
@@ -60,7 +60,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user2"
   },
   {
@@ -69,7 +69,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user3"
   },
   {
@@ -78,7 +78,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user3"
   },
   {
@@ -87,7 +87,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user3"
   },
 ])

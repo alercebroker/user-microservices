@@ -17,16 +17,16 @@ def test_query_pipeline_includes_grouping_by_object_stage():
     assert "$limit" in pipeline[-1]
     assert "$skip" in pipeline[-2]
     assert "$sort" in pipeline[-3]
-    assert pipeline[-4]["$project"]["object"] == "$_id"
-    assert pipeline[-5]["$group"]["_id"] == "$object"
+    assert "$project" in pipeline[-4]
+    assert pipeline[-5]["$group"]["_id"] == {"object": "$object", "report_type": "$report_type"}
 
 
 def test_query_pipeline_count_includes_grouping_by_object_stage():
     pipeline = QueryByObject().count_pipeline()
 
     assert "$count" in pipeline[-1]
-    assert pipeline[-2]["$project"]["object"] == "$_id"
-    assert pipeline[-3]["$group"]["_id"] == "$object"
+    assert "$project" in pipeline[-2]
+    assert pipeline[-3]["$group"]["_id"] == {"object": "$object", "report_type": "$report_type"}
 
 
 @mock.patch(connection)

@@ -4,7 +4,7 @@ from .. import utils
 
 endpoint = '/by_object'
 
-total = 4  # Number of objects in mongo-init.js
+total = 6  # Number of objects in mongo-init.js
 page_size = total // 3
 last_page = 3 + (1 if total % 3 else 0)
 

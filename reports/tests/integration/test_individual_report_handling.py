@@ -9,7 +9,7 @@ report_input = {
     "solved": False,
     "source": "source0",
     "observation": "obs0",
-    "report_type": "type0",
+    "report_type": "TOM",
     "owner": "user0"
 }
 different_input = {
@@ -17,7 +17,7 @@ different_input = {
     "solved": True,
     "source": "new_source",
     "observation": "new_obs",
-    "report_type": "new_type",
+    "report_type": "Bogus",
     "owner": "new_user"
 }
 

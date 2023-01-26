@@ -23,7 +23,7 @@ def report_factory(**kwargs):
         "solved": False,
         "source": "source",
         "observation": "observation",
-        "report_type": "report_type",
+        "report_type": random.choice(["TOM", "Bogus"]),
         "owner": "owner"
     }
     report.update(kwargs)
