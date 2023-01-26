@@ -6,6 +6,7 @@ from fastapi import Query
 from pydantic import dataclasses
 
 from .schemas import ReportOut, ReportByObject, ReportByDay
+from .utils import REPORT_TYPES
 
 
 reports_fields = query.fields(ReportOut)
@@ -18,7 +19,7 @@ class CommonQueries:
     date_after: datetime | None = Query(None, description="Starting date of reports")
     date_before: datetime | None = Query(None, description="End date of reports")
     object: Pattern | None = Query(None, description="Reports for object IDs matching regex")
-    type: Literal["TOM", "Bogus"] | None = Query(None, description="Report type")
+    type: Literal[REPORT_TYPES] | None = Query(None, description="Report type")
     owned: bool = Query(False, description="Whether to include only reports owned by requesting user")
 
     recipes: ClassVar[tuple[query.QueryRecipe]] = (
