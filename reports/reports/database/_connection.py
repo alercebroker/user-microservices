@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 import httpx
 import pandas as pd
 from astropy.time import Time
