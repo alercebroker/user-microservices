@@ -1,19 +1,12 @@
-from enum import Enum, IntEnum
-from typing import NamedTuple, ClassVar
+from typing import ClassVar, NamedTuple, Literal
 
 from fastapi import Query
 from pydantic import BaseModel, dataclasses
 
 
-def field_enum_factory(model: type[BaseModel], by_alias: bool = True, *, exclude=None) -> type[Enum]:
-    name, exclude = model.__name__ + "Fields", exclude or set()
-    definition = {field.name: field.alias if by_alias else field.name for field in model.__fields__.values()}
-    return Enum(name, {k: v for k, v in definition.items() if k not in exclude}, type=str)
-
-
-class Direction(IntEnum):
-    ascending = 1
-    descending = -1
+def fields(model: type[BaseModel], by_alias: bool = True, *, exclude=None) -> tuple[str]:
+    exclude = exclude or set()
+    return tuple(f.alias if by_alias else f.name for f in model.__fields__.values() if f.name not in exclude)
 
 
 class QueryRecipe(NamedTuple):
@@ -98,12 +91,12 @@ class BaseSortedQuery(BaseQuery):
     This mainly refers to adding the available options, a default and proper description.
     """
 
-    order_by: Enum
-    direction: Direction = Query(Direction.descending, description="Sort by ascending or descending values")
+    order_by: Literal["NOT_IMPLEMENTED"]
+    direction: Literal["1", "-1"] = Query("-1", description="Sort by ascending or descending values")
 
     def _sort(self) -> list[dict]:
         """Generates sort stage for pipeline"""
-        return [{"$sort": {self.order_by: self.direction}}]
+        return [{"$sort": {self.order_by: int(self.direction)}}]
 
     def pipeline(self) -> list[dict]:
         """Aggregation pipeline for mongo.
