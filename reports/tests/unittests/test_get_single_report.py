@@ -1,6 +1,5 @@
 from unittest import mock
 
-from db_handler import DocumentNotFound
 from pymongo.errors import ServerSelectionTimeoutError
 
 from reports.database.models import Report
@@ -27,7 +26,7 @@ def test_read_report_success(mock_connection):
 @mock.patch(connection)
 def test_read_report_fails_if_missing_document(mock_connection):
     read_document = mock.AsyncMock()
-    read_document.side_effect = DocumentNotFound(str(oid))
+    read_document.return_value = None
     mock_connection.read_document = read_document
 
     response = utils.client.get(endpoint)
