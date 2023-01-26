@@ -1,6 +1,6 @@
-import httpx
+from typing import Iterable
+
 import pandas as pd
-from astropy.time import Time
 from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
@@ -12,10 +12,17 @@ from .database import models
 root = APIRouter()
 
 
-def _check_exists(document, oid):
+def _check_exists(document: dict | None, oid: str):
     if document is None:
         raise DocumentNotFound(oid)
     return document
+
+
+def _to_iso(dataframe: pd.DataFrame, fields: Iterable):
+    if isinstance(fields, str):
+        fields = [fields]
+    for field in fields:
+        dataframe[field].map(lambda x: x.isoformat(timespec="milliseconds"))
 
 
 @root.get("/", response_model=schemas.PaginatedReports)
@@ -50,22 +57,13 @@ async def get_report_list_by_object(q: filters.QueryByObject = Depends()):
 async def get_reports_as_csv(q: filters.QueryByObject = Depends()):
     """Query reports grouped by object"""
     reports = await database.get_connection().paginate_documents(models.Report, q)
-    reports = pd.DataFrame(reports["results"]).drop(columns="users").set_index("object")
-    reports["first_date"].map(lambda x: x.isoformat(timespec="milliseconds"))
-    reports["last_date"].map(lambda x: x.isoformat(timespec="milliseconds"))
+    reports = pd.DataFrame(reports).drop(columns="users").set_index("object")
+    _to_iso(reports, ["first_date", "last_date"])
 
-    url = "https://api.alerce.online/alerts/v1/objects"
-    with httpx.Client() as client:
-        objects = client.get(url, params={"oid": reports.index.to_list(), "page_size": q.page_size})
-    objects = pd.DataFrame(objects.json()["items"])[["oid", "ndet", "firstmjd", "lastmjd"]]
-    objects["firstmjd"] = Time(objects["firstmjd"], format="mjd").to_value("isot")
-    objects["lastmjd"] = Time(objects["lastmjd"], format="mjd").to_value("isot")
-
-    mapping = {"oid": "object", "firstmjd": "first_detection", "lastmjd": "last_detection", "ndet": "nobs"}
-    objects = objects.rename(columns=mapping).set_index("object")
+    objects = database.get_connection().query_objects(reports.index.to_list())
 
     headers = {"Content-Disposition": f"attachment; filename=data.csv"}
-    return StreamingResponse(iter(objects.join(reports).to_csv()), media_type="text/csv", headers=headers)
+    return StreamingResponse(iter(reports.join(objects).to_csv()), media_type="text/csv", headers=headers)
 
 
 @root.get("/count_by_day", response_model=list[schemas.ReportByDay])
