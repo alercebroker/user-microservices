@@ -2,7 +2,7 @@ import pytest
 from pydantic import BaseModel
 from pydantic.error_wrappers import ValidationError
 
-from db_handler import ModelMetaclass, SchemaMetaclass, PyObjectId
+from db_handler import ModelMetaclass, SchemaMetaclass, Singleton, PyObjectId
 
 
 @pytest.fixture
@@ -103,3 +103,26 @@ def test_schema_metaclass_makes_all_fields_optional_if_required():
 
     assert TestModel2.__fields__["field1"].required is False
     assert TestModel2.__fields__["field2"].required is False
+
+
+def test_singleton_metaclass_returns_always_same_instance():
+    class Test(metaclass=Singleton):
+        pass
+
+    original = Test()
+    second = Test()
+
+    assert original is second
+
+
+def test_singleton_metaclass_respects_inheritance():
+    class Test1(metaclass=Singleton):
+        pass
+
+    class Test2(Test1):
+        pass
+
+    original = Test1()
+    second = Test2()
+
+    assert original is not second
