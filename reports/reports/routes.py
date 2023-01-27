@@ -4,6 +4,8 @@ import pandas as pd
 from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from query import BasePaginatedQuery
 
 from . import filters, schemas
 from .database import db, models
@@ -25,7 +27,7 @@ def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
         dataframe[field].map(lambda x: x.isoformat(timespec="milliseconds"))
 
 
-def _paginate(total, results, q):
+def _paginate(total: int, results: list[BaseModel], q: BasePaginatedQuery):
     return {
         "count": total,
         "next": q.page + 1 if q.skip + q.limit < total else None,
@@ -34,18 +36,18 @@ def _paginate(total, results, q):
     }
 
 
-@root.get("/query", response_model=schemas.PaginatedReports, include_in_schema=False, tags=["queries"])
-async def query_paginated_reports(q: filters.QueryByReport = Depends()):
-    """Query reports"""
+@root.get("/", response_model=schemas.PaginatedReportsByObject, tags=["queries"])
+async def query_paginated_object_reports(q: filters.QueryByObject = Depends()):
+    """Query reports grouped by object"""
     total = await db.count_documents(models.Report, q)
     results = await db.paginate_documents(models.Report, q)
 
     return _paginate(total, results, q)
 
 
-@root.get("/", response_model=schemas.PaginatedReportsByObject, tags=["queries"])
-async def query_paginated_object_reports(q: filters.QueryByObject = Depends()):
-    """Query reports grouped by object"""
+@root.get("/reports", response_model=schemas.PaginatedReports, tags=["queries"])
+async def query_paginated_reports(q: filters.QueryByReport = Depends()):
+    """Query individual reports"""
     total = await db.count_documents(models.Report, q)
     results = await db.paginate_documents(models.Report, q)
 

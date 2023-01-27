@@ -4,7 +4,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 
 from .. import utils
 
-endpoint = "/query"
+endpoint = "/reports"
 
 connection = 'reports.routes.db'
 
