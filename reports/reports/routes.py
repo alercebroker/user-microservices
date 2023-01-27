@@ -1,10 +1,10 @@
 from datetime import datetime
 
 import pandas as pd
+from astropy.time import Time
 from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from query import BasePaginatedQuery
 
 from . import filters, schemas
@@ -27,7 +27,14 @@ def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
         dataframe[field].map(lambda x: x.isoformat(timespec="milliseconds"))
 
 
-def _paginate(total: int, results: list[BaseModel], q: BasePaginatedQuery):
+def _mjd_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
+    if isinstance(fields, str):
+        fields = [fields]
+    for field in fields:
+        dataframe[field] = Time(dataframe[field], format="mjd").to_value("isot")
+
+
+def _paginate(total: int, results: list, q: BasePaginatedQuery):
     return {
         "count": total,
         "next": q.page + 1 if q.skip + q.limit < total else None,
@@ -74,6 +81,7 @@ async def download_report_table(q: filters.QueryByObject = Depends()):
     _datetime_to_iso(reports, ["first_date", "last_date"])
 
     objects = db.query_objects(reports.index.to_list())
+    _mjd_to_iso(objects, ["first_detection", "last_detection"])
 
     filename = f"{q.type if q.type else 'all'}_{datetime.now():%Y%m%d}.csv"
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
