@@ -19,6 +19,15 @@ db.reports.insertMany([
     owner: "user2"
   },
   {
+    date: new ISODate("2023-01-02T12:00:00Z"),
+    object: "OBJECT1",
+    solved: false,
+    source: "source1",
+    observation: "obs1",
+    report_type: "TOM",
+    owner: "user4"
+  },
+  {
     date: new ISODate("2023-01-01T12:00:00Z"),
     object: "OBJECT2",
     solved: false,
@@ -43,7 +52,7 @@ db.reports.insertMany([
     source: "source1",
     observation: "obs1",
     report_type: "TOM",
-    owner: "user3"
+    owner: "user4"
   },
   {
     date: new ISODate("2023-01-02T00:00:00Z"),
@@ -66,15 +75,6 @@ db.reports.insertMany([
   {
     date: new ISODate("2023-01-02T12:00:00Z"),
     object: "OBJECT3",
-    solved: false,
-    source: "source1",
-    observation: "obs1",
-    report_type: "TOM",
-    owner: "user3"
-  },
-  {
-    date: new ISODate("2023-01-02T12:00:00Z"),
-    object: "OBJECT1",
     solved: false,
     source: "source1",
     observation: "obs1",
