@@ -21,14 +21,14 @@ def _check_exists(document: dict | None, oid: str):
 
 
 def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
-    if isinstance(fields, str):
+    if isinstance(fields, str):  # pragma: no cover
         fields = [fields]
     for field in fields:
-        dataframe[field].map(lambda x: x.isoformat(timespec="milliseconds"))
+        dataframe[field] = dataframe[field].map(lambda x: x.isoformat(timespec="milliseconds"))
 
 
 def _mjd_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
-    if isinstance(fields, str):
+    if isinstance(fields, str):  # pragma: no cover
         fields = [fields]
     for field in fields:
         dataframe[field] = Time(dataframe[field], format="mjd").to_value("isot")
@@ -80,12 +80,18 @@ async def download_report_table(q: filters.QueryByObject = Depends()):
     reports = pd.DataFrame(reports).drop(columns="users").set_index("object")
     _datetime_to_iso(reports, ["first_date", "last_date"])
 
-    objects = db.query_objects(reports.index.to_list())
+    objects = db.query_objects(reports.index.unique().to_list())
     _mjd_to_iso(objects, ["first_detection", "last_detection"])
+    reports = reports.join(objects)
 
     filename = f"{q.type if q.type else 'all'}_{datetime.now():%Y%m%d}.csv"
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
-    return StreamingResponse(iter(reports.join(objects).to_csv()), media_type="text/csv", headers=headers)
+
+    if q.order_by == "object":
+        reports.sort_index(ascending=(q.direction == 1), inplace=True)
+    else:
+        reports.sort_values(by=q.order_by, ascending=(q.direction == 1), inplace=True)
+    return StreamingResponse(iter(reports.to_csv()), media_type="text/csv", headers=headers)
 
 
 @root.post("/", response_model=schemas.ReportOut, status_code=201, tags=["report"])

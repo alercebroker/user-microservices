@@ -13,7 +13,7 @@ class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
     def query_objects(self, ids: list[str]) -> pd.DataFrame:
         with httpx.Client() as client:
             objects = client.get(f"{self._alerts_url}/objects", params={"oid": ids, "page_size": len(ids)})
-        objects = pd.DataFrame(objects.json()["items"])[["oid", "ndet", "firstmjd", "lastmjd"]]
+        objects = pd.DataFrame(objects.json()["items"])[["oid", "ndet", "firstmjd", "lastmjd"]].drop_duplicates()
 
         mapping = {"oid": "object", "firstmjd": "first_detection", "lastmjd": "last_detection", "ndet": "nobs"}
         return objects.rename(columns=mapping).set_index("object")
