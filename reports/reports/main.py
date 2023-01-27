@@ -15,6 +15,7 @@ app = FastAPI(
     description=__doc__,
     version=__version__,
     contact={"name": "ALeRCE Broker", "email": "alercebroker@gmail.com", "url": "https://alerce.science"},
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
 )
 
 app.add_middleware(PrometheusMiddleware)
