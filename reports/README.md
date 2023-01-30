@@ -17,29 +17,12 @@ To run integration tests:
 poetry run pytest tests/integration
 ```
 
-In order to run the API locally, first you need to have
-a MongoDB instance to connect to. It is possible to use the same 
-database used for running the integration tests by running:
-```commandline
-docker compose -f tests/docker-compose.yml up -d
-```
-If the MongoDB image is up, it won't be possible to run the integration 
-tests. To stop the container, run:
-```commandline
-docker compose -f tests/docker-compose.yml down
-```
-When running the container, the database already comes with a few
-mock reports already inserted.
-
-Afterwards, you can run the API using:
+In order to run the API locally, you can run:
 ```commandline
 uvicorn reports.main:app --reload
 ```
 The `--reload` option allows for changes done in the source code to
 be detected and restart the API to reflect those changes automatically.
-When running the API in this way, it will use the values in `.env.test`
-to initialize the database connection. In a standard run, it should use 
-proper environmental variables to define the settings.
 
 The environmental variables required are:
 * `MONGODB_HOST`: IP or host name for MongoDB
@@ -47,6 +30,11 @@ The environmental variables required are:
 * `MONGODB_USERNAME`: Username to connect to the database
 * `MONGODB_PASSWORD`: Password for the given user
 * `MONGODB_DATABASE`: Name of the database the contains the collections of interest
+* `ALERT_API_URL`: Base URL for the alerts API (used only for generating CSV files)
+
+In case a given variable is not defined, it will search for them in 
+`.env.test`. This file contains the variables required to run the integration
+tests.
 
 **Note:** The docker image must be built from the root of the monorepo, 
 not from the location of the `Dockerfile`.
