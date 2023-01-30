@@ -1,11 +1,16 @@
+import logging
 from collections import UserDict
 from typing import Any
 
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo.errors import ServerSelectionTimeoutError
 from query import BaseQuery, BasePaginatedQuery
 
 from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
+
+
+logger = logging.getLogger(__package__)
 
 
 class _MongoConfig(UserDict):
@@ -50,9 +55,11 @@ class MongoConnection:
         return self._client[self._config.db]
 
     async def connect(self):
-        self._client = AsyncIOMotorClient(connect=True, **self._config)
+        self._client = AsyncIOMotorClient(**self._config)
+        logger.debug(f"Connecting to mongodb://{self._config['host']}:{self._config['port']}")
 
     async def close(self):
+        logger.debug(f"Closing connection to mongodb")
         self._client.close()
         self._client = None
 
@@ -66,9 +73,13 @@ class MongoConnection:
     async def create_db(self):
         for cls in ModelMetaclass.__models__:
             if cls.__indexes__:
-                await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
+                try:
+                    await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
+                except ServerSelectionTimeoutError:
+                    logger.error(f"Cannot connect to MongoDB server: Skipping indexing for {cls.__tablename__}")
 
     async def drop_db(self):
+        logger.info(f"Dropping database {self._config.db}")
         await self._client.drop_database(self.db)
 
     @staticmethod

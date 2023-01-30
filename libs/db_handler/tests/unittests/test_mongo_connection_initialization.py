@@ -62,7 +62,7 @@ async def test_connection_creates_async_motor_client(mock_client):
 
     assert conn._client == mock_client.return_value
     expected = {k: v for k, v in input_settings.items() if k != "database"}
-    mock_client.assert_called_once_with(**expected, connect=True)
+    mock_client.assert_called_once_with(**expected)
 
 
 @pytest.mark.asyncio
