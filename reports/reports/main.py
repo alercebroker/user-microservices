@@ -37,14 +37,19 @@ async def shutdown():
 
 @app.exception_handler(DuplicateKeyError)
 async def bad_request_for_duplicates(request, exc):
-    message = f"Duplicate document in database: {str(exc)}"
+    message = f"Duplicate document in collection: {str(exc)}"
     return JSONResponse(status_code=400, content={"detail": message})
 
 
 @app.exception_handler(ServerSelectionTimeoutError)
 async def database_is_down(request, exc):
-    message = f"Cannot connect to database server: {str(exc)}"
+    message = f"Cannot connect to MongoDB server: {str(exc)}"
     return JSONResponse(status_code=503, content={"detail": message})
+
+
+@app.exception_handler(ConnectionError)
+async def connection_error(request, exc):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 @app.exception_handler(DocumentNotFound)
