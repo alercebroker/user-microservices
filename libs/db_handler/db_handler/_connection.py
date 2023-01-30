@@ -50,7 +50,9 @@ def log_if_error(error, message):
             except error:
                 self.logger.error(message)
                 raise
+
         return wrapper
+
     return decorator
 
 
