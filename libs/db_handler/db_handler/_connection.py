@@ -91,17 +91,17 @@ class MongoConnection:
         await self.db[model.__tablename__].insert_one(document)
         return document
 
-    async def read_document(self, model: ModelMetaclass, oid: str) -> Future:
+    async def read_document(self, model: ModelMetaclass, oid: str) -> dict | None:
         oid = self._parse_oid(oid)
         return self._check(await self.db[model.__tablename__].find_one({"_id": oid}), oid)
 
-    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> Future:
+    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict | None:
         """Will quietly work even if `update` includes fields not defined in `model`"""
         oid = self._parse_oid(oid)
         modify = ({"_id": oid}, {"$set": update})
         return self._check(await self.db[model.__tablename__].find_one_and_update(*modify, return_document=True), oid)
 
-    async def delete_document(self, model: ModelMetaclass, oid: str) -> Future:
+    async def delete_document(self, model: ModelMetaclass, oid: str) -> dict | None:
         oid = self._parse_oid(oid)
         return self._check(await self.db[model.__tablename__].find_one_and_delete({"_id": oid}), oid)
 
