@@ -10,9 +10,6 @@ from query import BaseQuery, BasePaginatedQuery
 from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
 
 
-logger = logging.getLogger(__package__)
-
-
 class _MongoConfig(UserDict):
     """Special dictionary used to parse configuration dictionaries for mongodb.
 
@@ -47,17 +44,19 @@ class _MongoConfig(UserDict):
 
 def log_if_error(error, message):
     def decorator(function):
-        async def wrapper(*args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             try:
-                return await function(*args, **kwargs)
+                return await function(self, *args, **kwargs)
             except error:
-                logger.error(message)
+                self.logger.error(message)
                 raise
         return wrapper
     return decorator
 
 
 class MongoConnection:
+    logger = logging.getLogger("connection")
+
     def __init__(self, **kwargs):
         self._config = _MongoConfig(kwargs)
         self._client = None
@@ -68,10 +67,10 @@ class MongoConnection:
 
     async def connect(self):
         self._client = AsyncIOMotorClient(**self._config)
-        logger.debug(f"Connected to: mongodb://{self._config['host']}:{self._config['port']}.")
+        self.logger.debug(f"Connected to: mongodb://{self._config['host']}:{self._config['port']}.")
 
     async def close(self):
-        logger.debug(f"Closing connection to MongoDB.")
+        self.logger.debug(f"Closing connection to MongoDB.")
         self._client.close()
         self._client = None
 
@@ -89,11 +88,11 @@ class MongoConnection:
                 try:
                     await self.db[name].create_indexes(cls.__indexes__)
                 except ServerSelectionTimeoutError:
-                    logger.warning(f"Skipping indexing for collection {name}: Cannot connect to MongoDB server.")
+                    self.logger.warning(f"Skipping indexing for collection {name}: Cannot connect to MongoDB server.")
 
     @log_if_error(ServerSelectionTimeoutError, "Unable to drop database: Cannot connect to MongoDB server.")
     async def drop_db(self):
-        logger.info(f"Dropping database: {self._config.db}.")
+        self.logger.info(f"Dropping database: {self._config.db}.")
         await self._client.drop_database(self.db)
 
     @staticmethod
@@ -103,10 +102,10 @@ class MongoConnection:
         except InvalidId:
             return oid
 
-    @staticmethod
-    def _raise(doc, oid):
+    @classmethod
+    def _raise(cls, doc, oid):
         if doc is None:
-            logger.error(f"Cannot find document with ID: {oid}")
+            cls.logger.error(f"Cannot find document with ID: {oid}")
             raise DocumentNotFound(oid)
         return doc
 
