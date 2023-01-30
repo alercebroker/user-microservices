@@ -1,6 +1,7 @@
 import json
 from unittest import mock
 
+from db_handler import DocumentNotFound
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
 from reports.database.models import Report
@@ -43,7 +44,7 @@ def test_patch_ignores_missing_fields_defined_in_schema(mock_connection):
 @mock.patch(connection)
 def test_patch_fails_if_missing_document(mock_connection):
     update_document = mock.AsyncMock()
-    update_document.return_value = None
+    update_document.side_effect = DocumentNotFound(oid)
     mock_connection.update_document = update_document
 
     response = utils.client.patch(endpoint, content=json.dumps(utils.json_converter(report)))

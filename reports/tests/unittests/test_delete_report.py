@@ -1,5 +1,6 @@
 from unittest import mock
 
+from db_handler import DocumentNotFound
 from pymongo.errors import ServerSelectionTimeoutError
 
 from reports.database.models import Report
@@ -27,7 +28,7 @@ def test_delete_report_fails_if_missing_document(mock_connection):
     oid = utils.random_oid()
 
     delete_document = mock.AsyncMock()
-    delete_document.return_value = None
+    delete_document.side_effect = DocumentNotFound(oid)
     mock_connection.delete_document = delete_document
 
     response = utils.client.delete(f"/{oid}")

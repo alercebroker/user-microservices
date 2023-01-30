@@ -2,7 +2,6 @@ from datetime import datetime
 
 import pandas as pd
 from astropy.time import Time
-from db_handler import DocumentNotFound
 from fastapi import APIRouter, Body, Depends
 from fastapi.responses import StreamingResponse
 from query import BasePaginatedQuery
@@ -12,12 +11,6 @@ from .database import db, models
 
 
 root = APIRouter()
-
-
-def _check_exists(document: dict | None, oid: str):
-    if document is None:
-        raise DocumentNotFound(oid)
-    return document
 
 
 def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
@@ -103,26 +96,22 @@ async def create_new_report(report: schemas.ReportIn = Body(...)):
 @root.get("/{report_id}", response_model=schemas.ReportOut, tags=["report"])
 async def get_report(report_id: str):
     """Retrieve single report based on its ID"""
-    document = await db.read_document(models.Report, report_id)
-    return _check_exists(document, report_id)
+    return await db.read_document(models.Report, report_id)
 
 
 @root.patch("/{report_id}", response_model=schemas.ReportOut, tags=["report"])
 async def update_existing_report(report_id: str, report: schemas.ReportUpdate = Body(...)):
     """Updates one or more fields of an existing report based on its ID"""
-    document = await db.update_document(models.Report, report_id, report.dict(exclude_none=True))
-    return _check_exists(document, report_id)
+    return await db.update_document(models.Report, report_id, report.dict(exclude_none=True))
 
 
 @root.put("/{report_id}", response_model=schemas.ReportOut, tags=["report"])
 async def replace_existing_report(report_id: str, report: schemas.ReportIn = Body(...)):
     """Updates the full report based on its ID"""
-    document = await db.update_document(models.Report, report_id, report.dict())
-    return _check_exists(document, report_id)
+    return await db.update_document(models.Report, report_id, report.dict())
 
 
 @root.delete("/{report_id}", status_code=204, tags=["report"])
 async def delete_report(report_id: str):
     """Deletes existing report based on its ID"""
-    document = await db.delete_document(models.Report, report_id)
-    _check_exists(document, report_id)
+    await db.delete_document(models.Report, report_id)
