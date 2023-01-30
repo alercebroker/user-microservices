@@ -1,7 +1,6 @@
 from collections import UserDict
 from typing import Any
 
-from asyncio import Future
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from query import BaseQuery, BasePaginatedQuery
