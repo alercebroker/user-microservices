@@ -6,7 +6,7 @@ from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from query import BaseQuery, BasePaginatedQuery
 
-from ._utils import ModelMetaclass, PyObjectId
+from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
 
 
 class _MongoConfig(UserDict):
@@ -79,24 +79,30 @@ class MongoConnection:
         except InvalidId:
             return oid
 
+    @staticmethod
+    def _check(doc, oid):
+        if doc is None:
+            raise DocumentNotFound(oid)
+        return doc
+
     async def create_document(self, model: ModelMetaclass, document: dict) -> dict:
         """Fields in `document` not defined in `model` will be quietly ignored"""
         document = model(**document).dict(by_alias=True)
         await self.db[model.__tablename__].insert_one(document)
         return document
 
-    def read_document(self, model: ModelMetaclass, oid: str) -> Future:
+    async def read_document(self, model: ModelMetaclass, oid: str) -> Future:
         oid = self._parse_oid(oid)
-        return self.db[model.__tablename__].find_one({"_id": oid})
+        return self._check(await self.db[model.__tablename__].find_one({"_id": oid}), oid)
 
-    def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> Future:
+    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> Future:
         """Will quietly work even if `update` includes fields not defined in `model`"""
         oid = self._parse_oid(oid)
-        return self.db[model.__tablename__].find_one_and_update({"_id": oid}, {"$set": update}, return_document=True)
+        return self._check(await self.db[model.__tablename__].find_one_and_update({"_id": oid}, {"$set": update}, return_document=True), oid)
 
-    def delete_document(self, model: ModelMetaclass, oid: str) -> Future:
+    async def delete_document(self, model: ModelMetaclass, oid: str) -> Future:
         oid = self._parse_oid(oid)
-        return self.db[model.__tablename__].find_one_and_delete({"_id": oid})
+        return self._check(await self.db[model.__tablename__].find_one_and_delete({"_id": oid}), oid)
 
     async def count_documents(self, model: ModelMetaclass, q: BaseQuery) -> int:
         try:
@@ -111,5 +117,5 @@ class MongoConnection:
     async def read_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
         return [_ async for _ in self.db[model.__tablename__].aggregate(q.pipeline())]
 
-    def paginate_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> Future:
-        return self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)
+    async def paginate_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> list[dict]:
+        return await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)

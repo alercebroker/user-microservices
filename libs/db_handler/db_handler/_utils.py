@@ -2,7 +2,7 @@ from bson import ObjectId
 from pydantic import main
 
 
-class DocumentNotFound(ValueError):  # pragma: no cover
+class DocumentNotFound(ValueError):
     def __init__(self, oid):
         super().__init__(f"Document not found. ID: {oid}")
 

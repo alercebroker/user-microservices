@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from db_handler import PyObjectId
+from db_handler import DocumentNotFound, PyObjectId
 from .. import utils
 
 
@@ -114,7 +114,7 @@ async def test_read_document_indexed_by_different_type_does_not_cast_input_oid(m
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_read_document_returns_none_if_document_not_found(mock_client):
+async def test_read_document_fails_if_document_not_found(mock_client):
     oid = "plain_oid"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
@@ -124,7 +124,8 @@ async def test_read_document_returns_none_if_document_not_found(mock_client):
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    assert await conn.read_document(mock_model, oid) is None
+    with pytest.raises(DocumentNotFound):
+        await conn.read_document(mock_model, oid)
 
 
 @pytest.mark.asyncio
@@ -174,7 +175,7 @@ async def test_update_document_indexed_by_different_type_does_not_cast_input_oid
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_update_document_returns_none_if_document_not_found(mock_client):
+async def test_update_document_fails_if_document_not_found(mock_client):
     oid = "plain_oid"
 
     conn, mock_db = await utils.get_connection_and_db(mock_client)
@@ -186,7 +187,8 @@ async def test_update_document_returns_none_if_document_not_found(mock_client):
 
     mock_entry = {"field1": 1, "field2": 2}
 
-    assert await conn.update_document(mock_model, oid, mock_entry) is None
+    with pytest.raises(DocumentNotFound):
+        await conn.update_document(mock_model, oid, mock_entry)
 
 
 @pytest.mark.asyncio
@@ -238,7 +240,8 @@ async def test_delete_document_fails_if_document_not_found(mock_client):
     mock_model = mock.MagicMock()
     mock_model.__tablename__ = "tablename"
 
-    assert await conn.delete_document(mock_model, oid) is None
+    with pytest.raises(DocumentNotFound):
+        await conn.delete_document(mock_model, oid)
 
 
 @pytest.mark.asyncio
