@@ -4,7 +4,7 @@ from typing import Any
 
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pymongo.errors import ServerSelectionTimeoutError
+from pymongo.errors import ServerSelectionTimeoutError, DuplicateKeyError
 from query import BaseQuery, BasePaginatedQuery
 
 from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
@@ -45,6 +45,18 @@ class _MongoConfig(UserDict):
         super().__setitem__("".join(klist), value)
 
 
+def log_if_error(error, message):
+    def decorator(function):
+        async def wrapper(*args, **kwargs):
+            try:
+                return await function(*args, **kwargs)
+            except error:
+                logger.error(message)
+                raise
+        return wrapper
+    return decorator
+
+
 class MongoConnection:
     def __init__(self, **kwargs):
         self._config = _MongoConfig(kwargs)
@@ -56,10 +68,10 @@ class MongoConnection:
 
     async def connect(self):
         self._client = AsyncIOMotorClient(**self._config)
-        logger.debug(f"Connecting to mongodb://{self._config['host']}:{self._config['port']}")
+        logger.debug(f"Connected to: mongodb://{self._config['host']}:{self._config['port']}.")
 
     async def close(self):
-        logger.debug(f"Closing connection to mongodb")
+        logger.debug(f"Closing connection to MongoDB.")
         self._client.close()
         self._client = None
 
@@ -73,13 +85,15 @@ class MongoConnection:
     async def create_db(self):
         for cls in ModelMetaclass.__models__:
             if cls.__indexes__:
+                name = cls.__tablename__
                 try:
-                    await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
+                    await self.db[name].create_indexes(cls.__indexes__)
                 except ServerSelectionTimeoutError:
-                    logger.error(f"Cannot connect to MongoDB server: Skipping indexing for {cls.__tablename__}")
+                    logger.warning(f"Skipping indexing for collection {name}: Cannot connect to MongoDB server.")
 
+    @log_if_error(ServerSelectionTimeoutError, "Unable to drop database: Cannot connect to MongoDB server.")
     async def drop_db(self):
-        logger.info(f"Dropping database {self._config.db}")
+        logger.info(f"Dropping database: {self._config.db}.")
         await self._client.drop_database(self.db)
 
     @staticmethod
@@ -90,31 +104,39 @@ class MongoConnection:
             return oid
 
     @staticmethod
-    def _check(doc, oid):
+    def _raise(doc, oid):
         if doc is None:
+            logger.error(f"Cannot find document with ID: {oid}")
             raise DocumentNotFound(oid)
         return doc
 
+    @log_if_error(DuplicateKeyError, "Unable to create document: Duplicate entry in database.")
+    @log_if_error(ServerSelectionTimeoutError, "Unable to create document: Cannot connect to MongoDB server.")
     async def create_document(self, model: ModelMetaclass, document: dict) -> dict:
         """Fields in `document` not defined in `model` will be quietly ignored"""
         document = model(**document).dict(by_alias=True)
         await self.db[model.__tablename__].insert_one(document)
         return document
 
+    @log_if_error(ServerSelectionTimeoutError, "Unable to read document: Cannot connect to MongoDB server.")
     async def read_document(self, model: ModelMetaclass, oid: str) -> dict | None:
         oid = self._parse_oid(oid)
-        return self._check(await self.db[model.__tablename__].find_one({"_id": oid}), oid)
+        return self._raise(await self.db[model.__tablename__].find_one({"_id": oid}), oid)
 
+    @log_if_error(DuplicateKeyError, "Unable to update document: Duplicate entry in database.")
+    @log_if_error(ServerSelectionTimeoutError, "Unable to update document: Cannot connect to MongoDB server.")
     async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict | None:
         """Will quietly work even if `update` includes fields not defined in `model`"""
         oid = self._parse_oid(oid)
         modify = ({"_id": oid}, {"$set": update})
-        return self._check(await self.db[model.__tablename__].find_one_and_update(*modify, return_document=True), oid)
+        return self._raise(await self.db[model.__tablename__].find_one_and_update(*modify, return_document=True), oid)
 
+    @log_if_error(ServerSelectionTimeoutError, "Unable to delete document: Cannot connect to MongoDB server.")
     async def delete_document(self, model: ModelMetaclass, oid: str) -> dict | None:
         oid = self._parse_oid(oid)
-        return self._check(await self.db[model.__tablename__].find_one_and_delete({"_id": oid}), oid)
+        return self._raise(await self.db[model.__tablename__].find_one_and_delete({"_id": oid}), oid)
 
+    @log_if_error(ServerSelectionTimeoutError, "Unable to count documents: Cannot connect to MongoDB server.")
     async def count_documents(self, model: ModelMetaclass, q: BaseQuery) -> int:
         try:
             (total,) = await self.db[model.__tablename__].aggregate(q.count_pipeline()).to_list(1)
@@ -125,8 +147,10 @@ class MongoConnection:
             return 0
         return total["total"]
 
+    @log_if_error(ServerSelectionTimeoutError, "Unable to read documents: Cannot connect to MongoDB server.")
     async def read_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
         return [_ async for _ in self.db[model.__tablename__].aggregate(q.pipeline())]
 
+    @log_if_error(ServerSelectionTimeoutError, "Unable to read documents: Cannot connect to MongoDB server.")
     async def paginate_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> list[dict]:
         return await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)
