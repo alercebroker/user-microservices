@@ -98,7 +98,8 @@ class MongoConnection:
     async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> Future:
         """Will quietly work even if `update` includes fields not defined in `model`"""
         oid = self._parse_oid(oid)
-        return self._check(await self.db[model.__tablename__].find_one_and_update({"_id": oid}, {"$set": update}, return_document=True), oid)
+        modify = ({"_id": oid}, {"$set": update})
+        return self._check(await self.db[model.__tablename__].find_one_and_update(*modify, return_document=True), oid)
 
     async def delete_document(self, model: ModelMetaclass, oid: str) -> Future:
         oid = self._parse_oid(oid)
