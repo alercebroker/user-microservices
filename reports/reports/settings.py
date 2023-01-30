@@ -10,9 +10,6 @@ class MongoSettings(BaseSettings):
     password: str
     database: str
 
-    class Config:
-        env_file = ".env.test"
-
 
 class ConnectionSettings(BaseSettings):
     alerts_api_url: str
