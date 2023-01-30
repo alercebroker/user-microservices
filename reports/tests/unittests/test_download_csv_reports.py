@@ -87,7 +87,8 @@ def define_constants():
 @mock.patch(client)
 def test_db_connection_query_objects_selects_and_renames_columns(mock_httpx, define_constants):
     httpx_client_output, query_objects_output, _, _ = define_constants
-    objects = httpx_client_output
+    objects = httpx_client_output.copy()
+    mock_httpx.Client.return_value.__enter__.return_value.get.return_value.is_error = False
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.json.return_value = objects
 
     output = db.query_objects([])
@@ -99,10 +100,19 @@ def test_db_connection_query_objects_removes_duplicates(mock_httpx, define_const
     httpx_client_output, query_objects_output, _, _ = define_constants
     objects = httpx_client_output.copy()
     objects["items"] = objects["items"] + objects["items"]
+    mock_httpx.Client.return_value.__enter__.return_value.get.return_value.is_error = False
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.json.return_value = objects
 
     output = db.query_objects([])
     assert_frame_equal(output, query_objects_output)
+
+
+@mock.patch(client)
+def test_db_connection_raises_connection_error_if_request_fails(mock_httpx):
+    mock_httpx.Client.return_value.__enter__.return_value.get.return_value.is_error = True
+
+    with pytest.raises(ConnectionError, match="Cannot connect to mock_url"):
+        db.query_objects([])
 
 
 @mock.patch(connection)
