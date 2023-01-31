@@ -210,3 +210,15 @@ def test_download_csv_fails_if_database_is_down(mock_connection):
 
     response = utils.client.get("/csv_reports")
     assert response.status_code == 503
+
+
+@mock.patch(connection)
+def test_download_csv_fails_if_alerts_api_is_down(mock_connection, define_constants):
+    _, _, documents_output, _ = define_constants
+    paginate_documents = mock.AsyncMock()
+    paginate_documents.return_value = documents_output
+    mock_connection.paginate_documents = paginate_documents
+    mock_connection.query_objects.side_effect = ConnectionError("")
+
+    response = utils.client.get("/csv_reports")
+    assert response.status_code == 503
