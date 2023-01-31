@@ -43,6 +43,8 @@ class _MongoConfig(UserDict):
 
 
 def log_if_error(error, message):
+    """To use as decorator in asynchronous class/instance methods. Assumes that the class has a logger."""
+
     def decorator(function):
         async def wrapper(self, *args, **kwargs):
             try:

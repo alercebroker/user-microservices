@@ -11,6 +11,7 @@ from .database import db, models
 
 
 root = APIRouter()
+csv_response = {200: {"content": {"text/csv": {}}}}
 
 
 def _datetime_to_iso(dataframe: pd.DataFrame, fields: str | list[str]):
@@ -66,7 +67,7 @@ async def count_reports_by_user(q: filters.QueryByUser = Depends()):
     return await db.read_documents(models.Report, q)
 
 
-@root.get("/csv_reports", response_class=StreamingResponse, responses={200: {"content": {"text/csv": {}}}}, tags=["download"])
+@root.get("/csv_reports", response_class=StreamingResponse, responses=csv_response, tags=["download"])
 async def download_report_table(q: filters.QueryByObject = Depends()):
     """Downloads a CSV with object and report information"""
     reports = await db.paginate_documents(models.Report, q)
