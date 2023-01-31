@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from pymongo.errors import ServerSelectionTimeoutError
 
 from db_handler import DocumentNotFound, PyObjectId
 from .. import utils
@@ -29,7 +30,7 @@ async def test_create_db_for_collection_with_indexes(mock_client, mock_model_met
 @mock.patch('db_handler._connection.ModelMetaclass')
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_create_db_for_collection_without_indexes(mock_client, mock_model_meta):
+async def test_create_db_for_collection_without_indexes_skips_them_quietly(mock_client, mock_model_meta):
     conn, mock_db = await utils.get_connection_and_db(mock_client)
     mock_db.__getitem__.return_value.create_indexes = mock.AsyncMock()
 
@@ -41,6 +42,27 @@ async def test_create_db_for_collection_without_indexes(mock_client, mock_model_
     await conn.create_db()
 
     mock_db.__getitem__.return_value.create_indexes.assert_not_called()
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection.ModelMetaclass')
+@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_create_db_for_collection_logs_warning_if_cannot_connect(mock_client, mock_model_meta):
+    conn, mock_db = await utils.get_connection_and_db(mock_client)
+    mock_db.__getitem__.return_value.create_indexes = mock.AsyncMock()
+    mock_db.__getitem__.return_value.create_indexes.side_effect = ServerSelectionTimeoutError()
+
+    mock_model = mock.MagicMock()
+    mock_model.__tablename__ = "tablename"
+    mock_model.__indexes__ = mock.MagicMock()
+    mock_model_meta.__models__ = [mock_model]
+
+    conn.logger = mock.MagicMock()
+    await conn.create_db()
+
+    mock_db.__getitem__.return_value.create_indexes.assert_awaited_once()
+    conn.logger.warning.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -366,3 +388,23 @@ async def test_pagination_with_results(mock_client):
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
     to_list.assert_awaited_once_with(mock_query.limit)
+
+
+@pytest.mark.asyncio
+@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
+@mock.patch('db_handler._connection.AsyncIOMotorClient')
+async def test_decorated_method_logs_if_error_happens(mock_client):
+    conn, mock_db = await utils.get_connection_and_db(mock_client)
+
+    mock_db.__getitem__.return_value.aggregate.side_effect = ServerSelectionTimeoutError()
+
+    mock_model = mock.MagicMock()
+    mock_model.__tablename__ = "tablename"
+
+    mock_query = mock.MagicMock()
+
+    conn.logger = mock.MagicMock()
+    with pytest.raises(ServerSelectionTimeoutError):
+        await conn.paginate_documents(mock_model, mock_query)
+
+    conn.logger.error.assert_called_once()
