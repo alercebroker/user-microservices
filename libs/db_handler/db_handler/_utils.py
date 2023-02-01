@@ -4,7 +4,7 @@ from pydantic import main
 
 class DocumentNotFound(ValueError):
     def __init__(self, oid):
-        super().__init__(f"Document not found. ID: {oid}")
+        super().__init__(f"Document with ID {oid} not found")
 
 
 class PyObjectId(ObjectId):
