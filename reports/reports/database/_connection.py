@@ -16,9 +16,8 @@ class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
         with httpx.Client() as client:
             objects = client.get(f"{self._alerts_url}/objects", params={"oid": ids, "page_size": len(ids)})
         if objects.is_error:
-            message = f"Cannot connect to {self._alerts_url} (error {objects.status_code})"
-            self.logger.error(message)
-            raise ConnectionError(message)
+            self.logger.error(f"Cannot connect to {self._alerts_url} (error {objects.status_code})")
+            raise ConnectionError("Cannot connect to ALeRCE alerts API")
         objects = pd.DataFrame(objects.json()["items"])[["oid", "ndet", "firstmjd", "lastmjd"]].drop_duplicates()
 
         mapping = {"oid": "object", "firstmjd": "first_detection", "lastmjd": "last_detection", "ndet": "nobs"}

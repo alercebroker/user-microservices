@@ -45,27 +45,6 @@ async def test_create_db_for_collection_without_indexes_skips_them_quietly(mock_
 
 
 @pytest.mark.asyncio
-@mock.patch('db_handler._connection.ModelMetaclass')
-@mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
-@mock.patch('db_handler._connection.AsyncIOMotorClient')
-async def test_create_db_for_collection_logs_warning_if_cannot_connect(mock_client, mock_model_meta):
-    conn, mock_db = await utils.get_connection_and_db(mock_client)
-    mock_db.__getitem__.return_value.create_indexes = mock.AsyncMock()
-    mock_db.__getitem__.return_value.create_indexes.side_effect = ServerSelectionTimeoutError()
-
-    mock_model = mock.MagicMock()
-    mock_model.__tablename__ = "tablename"
-    mock_model.__indexes__ = mock.MagicMock()
-    mock_model_meta.__models__ = [mock_model]
-
-    conn.logger = mock.MagicMock()
-    await conn.create_db()
-
-    mock_db.__getitem__.return_value.create_indexes.assert_awaited_once()
-    conn.logger.warning.assert_called_once()
-
-
-@pytest.mark.asyncio
 @mock.patch('db_handler._connection._MongoConfig', new=mock.MagicMock())
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
 async def test_drop_db(mock_client):
