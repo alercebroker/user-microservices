@@ -2,12 +2,12 @@ from functools import lru_cache
 
 import httpx
 import pandas as pd
-from db_handler import MongoConnection, Singleton
+from db_handler import MongoConnection
 
 from ..settings import get_settings
 
 
-class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
+class ReportDatabaseConnection(MongoConnection):
     def __init__(self, **kwargs):
         self._alerts_url = kwargs.pop("alerts_api_url")
         super().__init__(**kwargs.pop("mongodb"))
