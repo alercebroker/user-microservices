@@ -5,15 +5,16 @@ from fastapi.responses import JSONResponse
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 from starlette_prometheus import metrics, PrometheusMiddleware
 
-from .database import db
-from .routes import root
-from . import __version__
+from . import __version__, database, routes, settings
 
+
+settings = settings.get_settings()
 
 app = FastAPI(
     title="Reports API",
     description=__doc__,
     version=__version__,
+    root_path=settings.root_path,
     contact={"name": "ALeRCE Broker", "email": "alercebroker@gmail.com", "url": "https://alerce.science"},
     swagger_ui_parameters={"defaultModelsExpandDepth": -1},
 )
@@ -21,18 +22,18 @@ app = FastAPI(
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
 
-app.include_router(root)
+app.include_router(routes.root)
 
 
 @app.on_event("startup")
 async def startup():
-    await db.connect()
-    await db.create_db()
+    await database.get_connection().connect()
+    await database.get_connection().create_db()
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    await db.close()
+    await database.get_connection().close()
 
 
 @app.exception_handler(DuplicateKeyError)

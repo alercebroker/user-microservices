@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import httpx
 import pandas as pd
 from db_handler import MongoConnection, Singleton
@@ -23,4 +25,6 @@ class ReportDatabaseConnection(MongoConnection, metaclass=Singleton):
         return objects.rename(columns=mapping).set_index("object")
 
 
-db = ReportDatabaseConnection(**get_settings().dict())
+@lru_cache
+def get_connection() -> ReportDatabaseConnection:
+    return ReportDatabaseConnection(**get_settings().dict())

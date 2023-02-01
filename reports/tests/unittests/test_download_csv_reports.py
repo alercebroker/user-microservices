@@ -8,7 +8,7 @@ from astropy.time import Time
 from pandas.testing import assert_frame_equal
 from pymongo.errors import ServerSelectionTimeoutError
 
-from reports.database import db
+from reports.database import get_connection
 from .. import utils
 
 endpoint = "/csv_reports"
@@ -91,6 +91,7 @@ def test_db_connection_query_objects_selects_and_renames_columns(mock_httpx, def
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.is_error = False
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.json.return_value = objects
 
+    db = get_connection()
     output = db.query_objects([])
     assert_frame_equal(output, query_objects_output)
 
@@ -103,6 +104,7 @@ def test_db_connection_query_objects_removes_duplicates(mock_httpx, define_const
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.is_error = False
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.json.return_value = objects
 
+    db = get_connection()
     output = db.query_objects([])
     assert_frame_equal(output, query_objects_output)
 
@@ -111,6 +113,7 @@ def test_db_connection_query_objects_removes_duplicates(mock_httpx, define_const
 def test_db_connection_raises_connection_error_if_request_fails(mock_httpx):
     mock_httpx.Client.return_value.__enter__.return_value.get.return_value.is_error = True
 
+    db = get_connection()
     with pytest.raises(ConnectionError, match="Cannot connect to mock_url"):
         db.query_objects([])
 

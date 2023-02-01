@@ -11,8 +11,9 @@ class MongoSettings(BaseSettings):
     database: str
 
 
-class ConnectionSettings(BaseSettings):
+class Settings(BaseSettings):
     alerts_api_url: str
+    root_path: str = ""
     mongodb: MongoSettings
 
     class Config:
@@ -22,4 +23,4 @@ class ConnectionSettings(BaseSettings):
 
 @lru_cache
 def get_settings():
-    return ConnectionSettings()
+    return Settings()

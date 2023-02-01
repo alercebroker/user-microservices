@@ -7,10 +7,11 @@ from fastapi.responses import StreamingResponse
 from query import BasePaginatedQuery
 
 from . import filters, schemas
-from .database import db, models
+from .database import get_connection, models
 
 
 root = APIRouter()
+db = get_connection()
 csv_response = {200: {"content": {"text/csv": {}}}}
 
 
@@ -90,25 +91,26 @@ async def download_report_table(q: filters.QueryByObject = Depends()):
 
 @root.post("/", response_model=schemas.ReportOut, status_code=201, tags=["report"])
 async def create_new_report(report: schemas.ReportIn = Body(...)):
-    """Insert a new report in database. Date, ID and owner are set internally"""
+    """Insert a new report in database. Report ID, creation date and ~~owner~~ are set automatically"""
     return await db.create_document(models.Report, report.dict())
 
 
 @root.get("/{report_id}", response_model=schemas.ReportOut, tags=["report"])
 async def get_report(report_id: str):
-    """Retrieve single report based on its ID"""
+    """Retrieve single report given its ID"""
     return await db.read_document(models.Report, report_id)
 
 
 @root.patch("/{report_id}", response_model=schemas.ReportOut, tags=["report"])
 async def update_existing_report(report_id: str, report: schemas.ReportUpdate = Body(...)):
-    """Updates one or more fields of an existing report based on its ID"""
+    """Updates one or more fields of an existing report given its ID. It is not possible to modify
+    the ID, creation date or owner"""
     return await db.update_document(models.Report, report_id, report.dict(exclude_none=True))
 
 
 @root.put("/{report_id}", response_model=schemas.ReportOut, tags=["report"])
 async def replace_existing_report(report_id: str, report: schemas.ReportIn = Body(...)):
-    """Updates the full report based on its ID"""
+    """Updates the full report given its ID. It is not possible to modify the ID, creation date or owner"""
     return await db.update_document(models.Report, report_id, report.dict())
 
 
