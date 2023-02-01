@@ -154,7 +154,7 @@ class MongoConnection:
 
     @_error_logger
     async def read_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
-        return [_ async for _ in self.db[model.__tablename__].aggregate(q.pipeline())]
+        return await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(None)
 
     @_error_logger
     async def paginate_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> list[dict]:

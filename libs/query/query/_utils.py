@@ -5,7 +5,7 @@ from fastapi import Query
 from pydantic import BaseModel, dataclasses
 
 
-def fields(model: type[BaseModel], by_alias: bool = True, *, exclude=None) -> tuple[str]:
+def get_fields(model: type[BaseModel], by_alias: bool = True, *, exclude=None) -> tuple[str]:
     exclude = exclude or set()
     return tuple(f.alias if by_alias else f.name for f in model.__fields__.values() if f.name not in exclude)
 
@@ -61,13 +61,13 @@ class BaseQuery:
 
     recipes: ClassVar[tuple[QueryRecipe]]
 
-    def _match(self) -> list[dict]:
-        """Generates match stage for pipeline"""
-        return [{"$match": {k: v for k, v in (r.pair(self) for r in self.recipes) if v}}]
+    @staticmethod
+    def _project_without_id(field):
+        return {k: False if k == "_id" else True for k in field}
 
-    def _query_pipeline(self) -> list[dict]:
+    def _basic_pipeline(self) -> list[dict]:
         """All stages for generating documents of interest. Should not include sort, skip, etc."""
-        return self._match()
+        return [{"$match": {k: v for k, v in (r.pair(self) for r in self.recipes) if v}}]
 
     def pipeline(self) -> list[dict]:
         """Aggregation pipeline for mongo.
@@ -75,7 +75,7 @@ class BaseQuery:
         Returns:
             list[dict]: List with stages for mongo pipeline
         """
-        return self._query_pipeline()
+        return self._basic_pipeline()
 
     def count_pipeline(self) -> list[dict]:
         """Aggregation pipeline for mongo to count documents.
@@ -86,7 +86,7 @@ class BaseQuery:
         Returns:
             list[dict]: List with stages for mongo pipeline
         """
-        return self._query_pipeline() + [{"$count": "total"}]
+        return self._basic_pipeline() + [{"$count": "total"}]
 
 
 @dataclasses.dataclass
@@ -100,17 +100,13 @@ class BaseSortedQuery(BaseQuery):
     order_by: Literal["NOT_IMPLEMENTED"]
     direction: Direction = Query(-1, description="Sort by ascending or descending values")
 
-    def _sort(self) -> list[dict]:
-        """Generates sort stage for pipeline"""
-        return [{"$sort": {self.order_by: self.direction}}]
-
     def pipeline(self) -> list[dict]:
         """Aggregation pipeline for mongo.
 
         Returns:
             list[dict]: List with stages for mongo pipeline
         """
-        return super().pipeline() + self._sort()
+        return super().pipeline() + [{"$sort": {self.order_by: self.direction}}]
 
 
 @dataclasses.dataclass

@@ -298,7 +298,7 @@ async def test_read_document_list(mock_client):
     conn, mock_db = await utils.get_connection_and_db(mock_client)
 
     async_for = mock.AsyncMock()
-    async_for.__aiter__.return_value = [{}, {}, {}]
+    async_for.to_list.return_value = [{}, {}, {}]
     mock_db.__getitem__.return_value.aggregate.return_value = async_for
 
     mock_model = mock.MagicMock()
@@ -308,7 +308,7 @@ async def test_read_document_list(mock_client):
 
     docs = await conn.read_documents(mock_model, mock_query)
 
-    assert docs == async_for.__aiter__.return_value
+    assert docs == async_for.to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
 

@@ -8,6 +8,11 @@ from pydantic import dataclasses
 from .schemas import ReportOut, ReportByObject, ReportByDay, ReportByUser
 from .utils import REPORT_TYPES
 
+report_fields = query.get_fields(ReportOut)
+object_fields = query.get_fields(ReportByObject, exclude={"users"})
+by_day_fields = query.get_fields(ReportByDay)
+by_user_fields = query.get_fields(ReportByUser)
+
 
 @dataclasses.dataclass
 class CommonQueries:
@@ -23,25 +28,21 @@ class CommonQueries:
         query.QueryRecipe("report_type", ["$eq"], ["type"]),
     )
 
-    @staticmethod
-    def _project_without_id(fields):
-        return {k: False if k == "_id" else True for k in fields}
-
 
 @dataclasses.dataclass
 class QueryByReport(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return individual reports, directly as they come from the database."""
 
-    order_by: Literal[query.fields(ReportOut)] = Query("date", description="Field to sort by")
+    order_by: Literal[report_fields] = Query("date", description="Field to sort by")
 
 
 @dataclasses.dataclass
 class QueryByObject(CommonQueries, query.BasePaginatedQuery):
     """Queries that will return reports grouped by object."""
 
-    order_by: Literal[query.fields(ReportByObject, exclude={"users"})] = Query("last_date", description="Field to sort by")
+    order_by: Literal[object_fields] = Query("last_date", description="Field to sort by")
 
-    def _query_pipeline(self) -> list[dict]:
+    def _basic_pipeline(self) -> list[dict]:
         group = {
             "_id": {"object": "$object", "report_type": "$report_type"},
             "first_date": {"$min": "$date"},
@@ -52,30 +53,30 @@ class QueryByObject(CommonQueries, query.BasePaginatedQuery):
         project = self._project_without_id(group)
         project["object"] = "$_id.object"
         project["report_type"] = "$_id.report_type"
-        return super()._query_pipeline() + [{"$group": group}, {"$project": project}]
+        return super()._basic_pipeline() + [{"$group": group}, {"$project": project}]
 
 
 @dataclasses.dataclass
 class QueryByDay(CommonQueries, query.BaseSortedQuery):
     """Queries that return number of reports per day."""
 
-    order_by: Literal[query.fields(ReportByDay)] = Query("day", description="Field to sort by")
+    order_by: Literal[by_day_fields] = Query("day", description="Field to sort by")
 
-    def _query_pipeline(self) -> list[dict]:
+    def _basic_pipeline(self) -> list[dict]:
         group = {"_id": {"$dateTrunc": {"date": "$date", "unit": "day"}}, "count": {"$count": {}}}
         project = self._project_without_id(group)
         project["day"] = "$_id"
-        return super()._query_pipeline() + [{"$group": group}, {"$project": project}]
+        return super()._basic_pipeline() + [{"$group": group}, {"$project": project}]
 
 
 @dataclasses.dataclass
 class QueryByUser(CommonQueries, query.BaseSortedQuery):
     """Queries that return number of reports per day."""
 
-    order_by: Literal[query.fields(ReportByUser)] = Query("count", description="Field to sort by")
+    order_by: Literal[by_user_fields] = Query("count", description="Field to sort by")
 
-    def _query_pipeline(self) -> list[dict]:
+    def _basic_pipeline(self) -> list[dict]:
         group = {"_id": "$owner", "count": {"$count": {}}}
         project = self._project_without_id(group)
         project["user"] = "$_id"
-        return super()._query_pipeline() + [{"$group": group}, {"$project": project}]
+        return super()._basic_pipeline() + [{"$group": group}, {"$project": project}]
