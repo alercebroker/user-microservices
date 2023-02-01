@@ -333,12 +333,12 @@ async def test_pagination_for_empty_results(mock_client):
     conn.count_documents = mock.AsyncMock()
     conn.count_documents.return_value = 0
 
-    paginated = await conn.paginate_documents(mock_model, mock_query)
+    paginated = await conn.read_documents(mock_model, mock_query)
 
     assert paginated == to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_awaited_once_with(mock_query.limit)
+    to_list.assert_awaited_once_with(None)
 
 
 @pytest.mark.asyncio
@@ -361,12 +361,12 @@ async def test_pagination_with_results(mock_client):
     conn.count_documents = mock.AsyncMock()
     conn.count_documents.return_value = 30
 
-    paginated = await conn.paginate_documents(mock_model, mock_query)
+    paginated = await conn.read_documents(mock_model, mock_query)
 
     assert paginated == to_list.return_value
     mock_db.__getitem__.assert_called_with(mock_model.__tablename__)
     mock_db.__getitem__.return_value.aggregate.assert_called_once_with(mock_query.pipeline.return_value)
-    to_list.assert_awaited_once_with(mock_query.limit)
+    to_list.assert_awaited_once_with(None)
 
 
 @pytest.mark.asyncio
@@ -384,6 +384,6 @@ async def test_decorated_method_logs_if_error_happens(mock_client):
 
     conn.logger = mock.MagicMock()
     with pytest.raises(ServerSelectionTimeoutError):
-        await conn.paginate_documents(mock_model, mock_query)
+        await conn.read_documents(mock_model, mock_query)
 
     conn.logger.error.assert_called_once()

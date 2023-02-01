@@ -121,9 +121,9 @@ def test_db_connection_raises_connection_error_if_request_fails(mock_httpx):
 @mock.patch(connection)
 def test_download_csv_reports_joins_values_by_object_id(mock_connection, define_constants):
     _, query_objects_output, documents_output, expected_output = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.return_value = query_objects_output.copy()
 
     response = utils.client.get("/csv_reports", params={"order_by": "object", "direction": 1})
@@ -135,9 +135,9 @@ def test_download_csv_reports_joins_values_by_object_id(mock_connection, define_
 @mock.patch(connection)
 def test_download_csv_reports_keeps_order_of_documents_by_object(mock_connection, define_constants):
     _, query_objects_output, documents_output, expected_output = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.return_value = query_objects_output.copy().loc[["OID2", "OID1"]]
 
     response = utils.client.get("/csv_reports", params={"order_by": "object", "direction": -1})
@@ -149,9 +149,9 @@ def test_download_csv_reports_keeps_order_of_documents_by_object(mock_connection
 @mock.patch(connection)
 def test_download_csv_reports_keeps_order_of_documents_by_other_key(mock_connection, define_constants):
     _, query_objects_output, documents_output, expected_output = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.return_value = query_objects_output.copy()
 
     response = utils.client.get("/csv_reports", params={"order_by": "count", "direction": 1})
@@ -163,9 +163,9 @@ def test_download_csv_reports_keeps_order_of_documents_by_other_key(mock_connect
 @mock.patch(connection)
 def test_download_csv_reports_excludes_objects_with_no_match_in_documents(mock_connection, define_constants):
     _, query_objects_output, documents_output, expected_output = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output[:-1]
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output[:-1]
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.return_value = query_objects_output.copy()
 
     response = utils.client.get("/csv_reports", params={"order_by": "object", "direction": 1})
@@ -177,9 +177,9 @@ def test_download_csv_reports_excludes_objects_with_no_match_in_documents(mock_c
 @mock.patch(connection)
 def test_download_csv_reports_keeps_documents_with_no_match_in_objects(mock_connection, define_constants):
     _, query_objects_output, documents_output, expected_output = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.return_value = query_objects_output.copy().loc[["OID1"]]
 
     response = utils.client.get("/csv_reports", params={"order_by": "object", "direction": 1})
@@ -193,9 +193,9 @@ def test_download_csv_reports_keeps_documents_with_no_match_in_objects(mock_conn
 @mock.patch(connection)
 def test_download_csv_reports_keeps_duplicate_documents(mock_connection, define_constants):
     _, query_objects_output, documents_output, expected_output = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output + documents_output
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output + documents_output
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.return_value = query_objects_output.copy()
 
     response = utils.client.get("/csv_reports", params={"order_by": "object", "direction": 1})
@@ -207,9 +207,9 @@ def test_download_csv_reports_keeps_duplicate_documents(mock_connection, define_
 
 @mock.patch(connection)
 def test_download_csv_fails_if_database_is_down(mock_connection):
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.side_effect = ServerSelectionTimeoutError()
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.side_effect = ServerSelectionTimeoutError()
+    mock_connection.read_documents = read_documents
 
     response = utils.client.get("/csv_reports")
     assert response.status_code == 503
@@ -218,9 +218,9 @@ def test_download_csv_fails_if_database_is_down(mock_connection):
 @mock.patch(connection)
 def test_download_csv_fails_if_alerts_api_is_down(mock_connection, define_constants):
     _, _, documents_output, _ = define_constants
-    paginate_documents = mock.AsyncMock()
-    paginate_documents.return_value = documents_output
-    mock_connection.paginate_documents = paginate_documents
+    read_documents = mock.AsyncMock()
+    read_documents.return_value = documents_output
+    mock_connection.read_documents = read_documents
     mock_connection.query_objects.side_effect = ConnectionError("")
 
     response = utils.client.get("/csv_reports")

@@ -42,7 +42,7 @@ def _paginate(total: int, results: list, q: BasePaginatedQuery):
 async def query_paginated_object_reports(q: filters.QueryByObject = Depends()):
     """Query reports grouped by object"""
     total = await db.count_documents(models.Report, q)
-    results = await db.paginate_documents(models.Report, q)
+    results = await db.read_documents(models.Report, q)
 
     return _paginate(total, results, q)
 
@@ -51,7 +51,7 @@ async def query_paginated_object_reports(q: filters.QueryByObject = Depends()):
 async def query_paginated_reports(q: filters.QueryByReport = Depends()):
     """Query individual reports"""
     total = await db.count_documents(models.Report, q)
-    results = await db.paginate_documents(models.Report, q)
+    results = await db.read_documents(models.Report, q)
 
     return _paginate(total, results, q)
 
@@ -71,7 +71,7 @@ async def count_reports_by_user(q: filters.QueryByUser = Depends()):
 @root.get("/csv_reports", response_class=StreamingResponse, responses=csv_response, tags=["download"])
 async def download_report_table(q: filters.QueryByObject = Depends()):
     """Downloads a CSV with object and report information"""
-    reports = await db.paginate_documents(models.Report, q)
+    reports = await db.read_documents(models.Report, q)
     reports = pd.DataFrame(reports).drop(columns="users").set_index("object")
     _datetime_to_iso(reports, ["first_date", "last_date"])
 

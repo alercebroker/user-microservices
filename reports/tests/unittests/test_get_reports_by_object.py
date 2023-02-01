@@ -31,15 +31,15 @@ def test_query_pipeline_count_includes_grouping_by_object_stage():
 
 @mock.patch(connection)
 def test_read_report_by_object_empty_list(mock_connection):
-    count, paginate = mock.AsyncMock(), mock.AsyncMock()
+    count, read_documents = mock.AsyncMock(), mock.AsyncMock()
     mock_connection.count_documents = count
-    mock_connection.paginate_documents = paginate
+    mock_connection.read_documents = read_documents
     count.return_value = 0
-    paginate.return_value = []
+    read_documents.return_value = []
 
     response = utils.client.get(endpoint)
     assert response.status_code == 200
-    assert response.json() == {"count": 0, "next": None, "previous": None, "results": paginate.return_value}
+    assert response.json() == {"count": 0, "next": None, "previous": None, "results": read_documents.return_value}
 
 
 def test_read_report_by_object_list_fails_if_order_by_is_unknown():

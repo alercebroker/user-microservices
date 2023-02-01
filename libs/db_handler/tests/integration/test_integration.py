@@ -216,7 +216,7 @@ async def test_read_paginated_documents_with_elements(connection):
     db = connection.db
     await db["table"].insert_many([{"field1": _} for _ in range(30)])
 
-    q = MockPaginatedQuery(min_field=15, page_size=5, direction=1)
-    actual = await connection.paginate_documents(MockDocument, q)
+    q = MockPaginatedQuery(min_field=15, page_size=5, page=2, direction=1)
+    actual = await connection.read_documents(MockDocument, q)
 
-    assert actual == [_ async for _ in db["table"].find({"field1": {"$gte": 15}}).limit(5)]
+    assert actual == [_ async for _ in db["table"].find({"field1": {"$gte": 15}}).skip(5).limit(5)]
