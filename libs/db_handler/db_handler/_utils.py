@@ -1,28 +1,5 @@
-from functools import wraps
-
 from bson import ObjectId
 from pydantic import main
-from pymongo.errors import DuplicateKeyError
-
-
-def error_logger(method):
-    """Decorator for coroutines methods inside a class with a logger.
-
-    Will log the exception with stack info except for `DuplicateKeyError` and `DocumentNotFound` errors.
-    """
-    @wraps(method)
-    async def wrapper(slf, *args, **kwargs):
-        try:
-            return await method(slf, *args, **kwargs)
-        except DuplicateKeyError:
-            raise  # pragma: no cover
-        except DocumentNotFound:
-            raise  # pragma: no cover
-        except Exception as exc:
-            slf.logger.error(str(exc), stack_info=True)
-            raise
-
-    return wrapper
 
 
 class DocumentNotFound(ValueError):
