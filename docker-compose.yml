@@ -1,15 +1,25 @@
 version: "3"
 services:
+  mongo:
+    image: mongo:6.0
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=local
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=users
+    ports:
+      - "27017:27017"
   reports-api:
+    depends_on:
+      - mongo
     build:
       context: .
       dockerfile: reports/Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_HOST=${MONGODB_HOST}
-      - MONGODB_PORT=${MONGODB_PORT}
-      - MONGODB_USERNAME=${MONGODB_USERNAME}
-      - MONGODB_PASSWORD=${MONGODB_PASSWORD}
-      - MONGODB_DATABASE=${MONGODB_DATABASE}
-      - ALERTS_API_URL=${ALERTS_API_URL}
+      - MONGODB_HOST=${MONGODB_HOST:-mongo}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-local}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-password}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-users}
+      - ALERTS_API_URL=${ALERTS_API_URL:-https://dev-api.alerce.online/alerts/v1/}

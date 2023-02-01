@@ -1,5 +1,16 @@
 # Reports API
 
+## Deployment
+
+The following environmental variables are required unless noted:
+* `MONGODB_HOST`: IP or host name for MongoDB
+* `MONGODB_PORT`: Port used by MongoDB
+* `MONGODB_USERNAME`: Username to connect to the database
+* `MONGODB_PASSWORD`: Password for the given user
+* `MONGODB_DATABASE`: Name of the database the contains the collections of interest
+* `ALERTS_API_URL`: Base URL for the alerts API (used only for generating CSV files)
+* `ROOT_PATH` (optional): Base URL path. Needed when, for instance, running nginx with a prefix
+
 ## Development
 
 Install everything using poetry:
@@ -12,29 +23,19 @@ To run unit tests:
 poetry run pytest tests/unittest
 ```
 
-To run integration tests:
+To run integration tests (this will use the values in `.env.test`):
 ```commandline
 poetry run pytest tests/integration
 ```
 
 In order to run the API locally, you can run:
 ```commandline
-uvicorn reports.main:app --reload
+docker compose up --build -d reports-api
 ```
-The `--reload` option allows for changes done in the source code to
-be detected and restart the API to reflect those changes automatically.
-
-The environmental variables required are:
-* `MONGODB_HOST`: IP or host name for MongoDB
-* `MONGODB_PORT`: Port used by MongoDB
-* `MONGODB_USERNAME`: Username to connect to the database
-* `MONGODB_PASSWORD`: Password for the given user
-* `MONGODB_DATABASE`: Name of the database the contains the collections of interest
-* `ALERT_API_URL`: Base URL for the alerts API (used only for generating CSV files)
-
-In case a given variable is not defined, it will search for them in 
-`.env.test`. This file contains the variables required to run the integration
-tests.
+This will create an instance of MongoDB and build the reports API
+based on the values given in the `docker-compose.yml` file at the 
+repository root. When using the unmodified file, you can access 
+the API at http://localhost:8000.
 
 **Note:** The docker image must be built from the root of the monorepo, 
 not from the location of the `Dockerfile`.
