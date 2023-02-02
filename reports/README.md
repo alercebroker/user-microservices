@@ -2,7 +2,7 @@
 
 ## Development
 
-Install everything with poetry:
+Install everything using poetry:
 ```commandline
 poetry install
 ```
