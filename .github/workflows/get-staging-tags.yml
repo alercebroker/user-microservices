@@ -20,7 +20,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=ghcr.io/alercebroker/${{ package }}-api
+          DOCKER_IMAGE=ghcr.io/alercebroker/${{ inputs.package }}-api
           SHA=$(git rev-parse --short HEAD)
           VERSION=rc-$SHA
           TAGS="${DOCKER_IMAGE}:${VERSION}"
