@@ -4,7 +4,8 @@ on:
     branches:
       - main
     paths-ignore:
-      - '.github/**'
+      - '.github/workflows/tests.yml'
+      - '.github/workflows/test-template.yml'
 
 jobs:
   detect-changes:
