@@ -1,0 +1,25 @@
+name: Build staging image
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  detect-changes:
+    uses: ./.github/workflows/detect-changes.yml
+  get-tags-reports:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reports-api == 'true'
+    uses: ./.github/workflows/get-staging-tags.yml
+    with:
+      package: reports
+  build-and-push-reports:
+    needs: get-tags-reports
+    uses: ./.github/workflows/build-template.yml
+    with:
+      tags: ${{ needs.get-tags-reports.outputs.tags }}
+      package: reports
+    secrets:
+      PUBLISH_IMAGE_TOKEN: ${{ secrets.PUBLISH_IMAGE_TOKEN }}
