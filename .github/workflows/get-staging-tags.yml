@@ -1,0 +1,27 @@
+name: Get tags for staging
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+    outputs:
+      tags:
+        value: ${{ jobs.get-tags.outputs.tags }}
+
+jobs:
+  get-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.prep.outputs.tags }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Prepare
+        id: prep
+        run: |
+          DOCKER_IMAGE=ghcr.io/alercebroker/${{ package }}-api
+          SHA=$(git rev-parse --short HEAD)
+          VERSION=rc-$SHA
+          TAGS="${DOCKER_IMAGE}:${VERSION}"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
