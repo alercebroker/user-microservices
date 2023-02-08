@@ -1,8 +1,10 @@
 from functools import lru_cache
 from pydantic import BaseSettings
 
-class Settings(BaseSettings):
+class ServerSettings(BaseSettings):
     secret_key: str
+    auth_token_duration: int
+    refresh_token_duration: int
     port: int
 
 class GoogleOAuthSettings(BaseSettings):
@@ -25,8 +27,7 @@ class MongoSettings(BaseSettings):
 
 @lru_cache()
 def get_server_settings():
-    return Settings()
-
+    return ServerSettings()
 
 @lru_cache()
 def get_google_settings():

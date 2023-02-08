@@ -5,7 +5,3 @@ class VerifyIn(BaseModel):
 
 class RefreshIn(BaseModel):
     token: str = Field()
-
-class AuthToken(BaseModel):
-    access: str = Field()
-    refresh: str = Field()
