@@ -44,5 +44,10 @@ async def login(GoogleLoginIn,
     
 
     user_token = helper.create_user_token(user)
-    return user_token
+    refresh_token = helper.create_refresh_token(user)
+    
+    return {
+        "access": user_token,
+        "refresh": refresh_token
+    }
   

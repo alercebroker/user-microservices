@@ -30,14 +30,17 @@ class JWTHelper(object):
     def __init__(self, settings: ServerSettings) -> None:
         self.settings = settings
 
+    def _create_token(self, payload: dict):
+        token = jwt.encode(payload, key=self.settings.secret_key, algorithm="HS256")
+        return token
+
     def create_user_token(self, user: User):
         token_payload = {
             "user_id": user.id,
             "iss": "h",
             "exp": 1
         }
-        token = jwt.encode(token_payload, key=self.settings.secret_key, algorithm="HS256")
-        return token
+        return self._create_token(token_payload)
 
     def create_refresh_token(self, user: User):
         token_payload = {
@@ -45,8 +48,7 @@ class JWTHelper(object):
             "iss": "h",
             "exp": 1
         }
-        token = jwt.encode(token_payload, key=self.settings.secret_key, algorithm="HS256")
-        return token
+        return self._create_token(token_payload)
     
     def _verify_token(self, token:str, required_fields: list[str]):
         try:
