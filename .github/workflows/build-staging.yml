@@ -21,3 +21,17 @@ jobs:
       package: reports
     secrets:
       PUBLISH_IMAGE_TOKEN: ${{ secrets.PUBLISH_IMAGE_TOKEN }}
+  get-tags-users:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.users-api == 'true'
+    uses: ./.github/workflows/get-staging-tags.yml
+    with:
+      package: users
+  build-and-push-users:
+    needs: get-tags-users
+    uses: ./.github/workflows/build-template.yml
+    with:
+      tags: ${{ needs.get-tags-users.outputs.tags }}
+      package: users
+    secrets:
+      PUBLISH_IMAGE_TOKEN: ${{ secrets.PUBLISH_IMAGE_TOKEN }}
