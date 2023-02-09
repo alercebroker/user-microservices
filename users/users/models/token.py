@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-class VerifyIn(BaseModel):
+class TokenIn(BaseModel):
     token: str = Field()
 
 class RefreshIn(BaseModel):

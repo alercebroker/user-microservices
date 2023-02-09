@@ -6,8 +6,7 @@ from ..models import GoogleLoginIn
 from ..database import get_mongo_client, User, GoogleAuth
 from ..helpers import get_jwt_helper
 
-from fastapi import Depends
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 
@@ -34,7 +33,7 @@ async def login(GoogleLoginIn,
                 "email": user_email
             }
         }
-        # error aqui debe generar error 500
+        # error aqui debe generar error 500??
         user = db_client.create_new_user(new_user_dict)
     
     except Exception as e:
