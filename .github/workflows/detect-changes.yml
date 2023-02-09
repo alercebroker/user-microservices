@@ -4,7 +4,9 @@ on:
     outputs:
       reports-api:
         value: ${{ jobs.detect-changes.outputs.reports-api }}
-      db-lib:
+      users-api:
+        value: 
+      db-lib: ${{ jobs.detect-changes.outputs.users-api }}
         value: ${{ jobs.detect-changes.outputs.db-lib }}
       query-lib:
         value: ${{ jobs.detect-changes.outputs.query-lib }}
@@ -14,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       reports-api: ${{ steps.changes.outputs.reports-api }}
+      users-api: ${{ steps.changes.outputs.userss-api }}
       db-lib: ${{ steps.changes.outputs.db-lib }}
       query-lib: ${{ steps.changes.outputs.query-lib }}
     steps:
@@ -24,6 +27,10 @@ jobs:
           filters: |
             reports-api:
               - 'reports/**'
+              - 'libs/query/**'
+              - 'libs/db_handler/**'
+            reports-api:
+              - 'users/**'
               - 'libs/query/**'
               - 'libs/db_handler/**'
             db-lib:
