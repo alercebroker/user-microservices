@@ -1,7 +1,6 @@
 
 from db_handler import DocumentNotFound
-from ..database import get_mongo_client, User, GoogleAuth
-from ..helpers import get_jwt_helper
+from ..dependencies import get_mongo_client, get_jwt_helper
 from ..models import TokenIn, RefreshIn
 
 from fastapi import APIRouter, Depends
