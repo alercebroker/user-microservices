@@ -1,18 +1,5 @@
-from pydantic import Any
-from fastapi import Depends
 import jwt
-from .settings import ServerSettings, get_server_settings
-from .database import User
-
-class SingletonMetaClass(type):
-    # mover a lib
-    _instances = {}
-
-    def __call__(cls, *args: Any, **kwds: Any) -> Any:
-        if cls not in cls._instances:
-            instance = super().__call__(*args, **kwds)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
+# no se tiene que importar user, los metodos van a pedir todos los campos
 
 class JWTHelper(object):
 
@@ -27,24 +14,24 @@ class JWTHelper(object):
         "exp"
     ]
 
-    def __init__(self, settings: ServerSettings) -> None:
+    def __init__(self, settings: dict) -> None:
         self.settings = settings
 
     def _create_token(self, payload: dict):
         token = jwt.encode(payload, key=self.settings.secret_key, algorithm="HS256")
         return token
 
-    def create_user_token(self, user: User):
+    def create_user_token(self, user_id):
         token_payload = {
-            "user_id": user.id,
+            "user_id": user_id,
             "iss": "h",
             "exp": 1
         }
         return self._create_token(token_payload)
 
-    def create_refresh_token(self, user: User):
+    def create_refresh_token(self, user_id):
         token_payload = {
-            "user_id": user.id,
+            "user_id": user_id,
             "iss": "h",
             "exp": 1
         }
@@ -88,7 +75,3 @@ class JWTHelper(object):
     
     def decrypt_refresh_token(self, token:str):
         return self._decrypt_token(token, self.required_refresh_token_fields)
-
-def get_jwt_helper(settings: ServerSettings = Depends(get_server_settings)):
-    helper = JWTHelper(settings)
-    return helper

@@ -1,13 +1,8 @@
 from datetime import datetime
 from fastapi import Depends
 from db_handler import MongoConnection, DocumentNotFound
-from ..helpers import SingletonMetaClass
+from ..utils import SingletonMetaClass
 from .models import User, _utcnow
-from ..settings import MongoSettings, get_mongo_settings
-
-def get_mongo_client(settings: MongoSettings = Depends(get_mongo_settings)):
-    client = MongoClient(settings)
-    return client
 
 class MongoClient(MongoConnection, meta=SingletonMetaClass):
     #Tiene que ser clase para heredar de mongo conection
