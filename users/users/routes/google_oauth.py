@@ -1,10 +1,8 @@
 from fastapi import HTTPException
 
 from db_handler import DocumentNotFound
-from ..auth import get_google_auth_client
+from ..dependencies import get_google_auth_client, get_mongo_client, get_jwt_helper
 from ..models import GoogleLoginIn
-from ..database import get_mongo_client, User, GoogleAuth
-from ..utils import get_jwt_helper
 
 from fastapi import APIRouter, Depends
 
