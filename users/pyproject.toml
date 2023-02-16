@@ -13,6 +13,7 @@ db-handler = {path = "../libs/db_handler", develop = true}
 starlette-prometheus = "^0.9.0"
 Authlib = "^1.2.0"
 PyJWT = "2.3.0"
+cryptography = "39.0.1"
 bcrypt = "4.0.1"
 
 [tool.poetry.group.dev.dependencies]
