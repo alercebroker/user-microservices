@@ -22,6 +22,6 @@ def get_jwt_helper(jwt_setings: ServerSettings = Depends(get_server_settings)):
     jwt_helper = JWTHelper(jwt_setings)
     return jwt_helper
 
-def get_password_auth_client(server_settings: ServerSettings = Depends(get_server_settings)):
-    auth_client = PasswordAuthClient(server_settings)
+def get_password_auth_client():
+    auth_client = PasswordAuthClient()
     return auth_client
