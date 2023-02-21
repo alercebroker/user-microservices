@@ -1,8 +1,8 @@
 import jwt
 from datetime import datetime, timedelta
 
-def get_expiration_time(delta_secconds):
-    dt = datetime.now() + timedelta(secconds=delta_secconds)
+def get_expiration_time(delta_seconds):
+    dt = datetime.now() + timedelta(seconds=delta_seconds)
     return dt
 
 class JWTHelper(object):
@@ -46,7 +46,7 @@ class JWTHelper(object):
         try:
             jwt.decode(
                 token,
-                key=self.settings.secret_key,
+                key=self.settings["secret_key"],
                 algorithms=["HS256"],
                 options={
                     "require": required_fields
@@ -60,7 +60,7 @@ class JWTHelper(object):
     def _decrypt_token(self, token: str, required_fields: list[str]):
         decrypted_token = jwt.decode(
             token,
-            key=self.settings.secret_key,
+            key=self.settings["secret_key"],
             algorithms=["HS256"],
             options={
                 "require": required_fields
