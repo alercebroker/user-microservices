@@ -40,7 +40,7 @@ class JWTHelperTestCase(unittest.TestCase):
     def test_geting_corrects_tokens(self):
         # for user token
         auth_exp_time = self.get_shifted_timestamp(TEST_AUTH_TOKEN_DURATION)
-        with mock.patch('utils.jwt.get_expiration_time') as mock_get_exp: # el mock no esta funcionando
+        with mock.patch('utils.jwt.get_expiration_time') as mock_get_exp:
             mock_get_exp.return_value = auth_exp_time
             test_user_token = self.auth_helper.create_user_token(123)
         decrypted_user_token = self.decrypt_token(test_user_token)
@@ -53,8 +53,9 @@ class JWTHelperTestCase(unittest.TestCase):
 
         # for refresh token
         refresh_exp_time = self.get_shifted_timestamp(seconds=TEST_REFRESH_TOKEN_DURATION)
-        mock_get_exp.return_value = refresh_exp_time
-        test_refresh_token = self.auth_helper.create_refresh_token(456)
+        with mock.patch('utils.jwt.get_expiration_time') as mock_get_exp:
+            mock_get_exp.return_value = refresh_exp_time
+            test_refresh_token = self.auth_helper.create_refresh_token(456)
         decrypted_refresh_token = self.decrypt_token(test_refresh_token)
         expected_token_content = {
             "user_id": 456,
