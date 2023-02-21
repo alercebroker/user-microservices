@@ -6,7 +6,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user1"
   },
   {
@@ -15,8 +15,17 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user2"
+  },
+  {
+    date: new ISODate("2023-01-02T12:00:00Z"),
+    object: "OBJECT1",
+    solved: false,
+    source: "source1",
+    observation: "obs1",
+    report_type: "TOM",
+    owner: "user4"
   },
   {
     date: new ISODate("2023-01-01T12:00:00Z"),
@@ -24,7 +33,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user1"
   },
   {
@@ -33,7 +42,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type2",
+    report_type: "Bogus",
     owner: "user2"
   },
   {
@@ -42,8 +51,8 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
-    owner: "user3"
+    report_type: "TOM",
+    owner: "user4"
   },
   {
     date: new ISODate("2023-01-02T00:00:00Z"),
@@ -51,7 +60,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type2",
+    report_type: "Bogus",
     owner: "user1"
   },
   {
@@ -60,7 +69,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user2"
   },
   {
@@ -69,16 +78,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
-    owner: "user3"
-  },
-  {
-    date: new ISODate("2023-01-02T12:00:00Z"),
-    object: "OBJECT1",
-    solved: false,
-    source: "source1",
-    observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user3"
   },
   {
@@ -87,7 +87,7 @@ db.reports.insertMany([
     solved: false,
     source: "source1",
     observation: "obs1",
-    report_type: "type1",
+    report_type: "TOM",
     owner: "user3"
   },
 ])

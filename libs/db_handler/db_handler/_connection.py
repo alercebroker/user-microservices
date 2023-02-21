@@ -1,8 +1,11 @@
+import logging
 from collections import UserDict
+from functools import wraps
 from typing import Any
 
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 from query import BaseQuery, BasePaginatedQuery
 
 from ._utils import DocumentNotFound, ModelMetaclass, PyObjectId
@@ -41,18 +44,45 @@ class _MongoConfig(UserDict):
 
 
 class MongoConnection:
-    def __init__(self, config: dict):
-        self._config = _MongoConfig(config)
+    logger = logging.getLogger("connection")
+
+    def __init__(self, **kwargs):
+        self._config = _MongoConfig(kwargs)
         self._client = None
+
+    @staticmethod
+    def _error_logger(method):
+        """Decorator for coroutines methods.
+
+        Will log the exception with stack info except for `DuplicateKeyError` and `DocumentNotFound` errors.
+        """
+
+        @wraps(method)
+        async def wrapper(self, *args, **kwargs):
+            try:
+                return await method(self, *args, **kwargs)
+            except DuplicateKeyError:
+                raise  # pragma: no cover
+            except DocumentNotFound:
+                raise  # pragma: no cover
+            except Exception as exc:
+                self.logger.error(str(exc), stack_info=True)
+                raise
+
+        return wrapper
 
     @property
     def db(self) -> AsyncIOMotorDatabase:
         return self._client[self._config.db]
 
+    @_error_logger
     async def connect(self):
-        self._client = AsyncIOMotorClient(connect=True, **self._config)
+        self._client = AsyncIOMotorClient(**self._config)
+        self.logger.debug(f"Connected to: mongodb://{self._config['host']}:{self._config['port']}.")
 
+    @_error_logger
     async def close(self):
+        self.logger.debug(f"Closing connection to MongoDB.")
         self._client.close()
         self._client = None
 
@@ -63,49 +93,55 @@ class MongoConnection:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
+    @_error_logger
     async def create_db(self):
         for cls in ModelMetaclass.__models__:
             if cls.__indexes__:
-                await self.db[cls.__tablename__].create_indexes(cls.__indexes__)
+                name = cls.__tablename__
+                await self.db[name].create_indexes(cls.__indexes__)
 
+    @_error_logger
     async def drop_db(self):
+        self.logger.info(f"Dropping database: {self._config.db}.")
         await self._client.drop_database(self.db)
 
-    async def create_document(self, model: ModelMetaclass, document: dict, by_alias: bool = True) -> dict:
+    @staticmethod
+    def _parse_oid(oid):
+        try:
+            return PyObjectId(oid)
+        except InvalidId:
+            return oid
+
+    @classmethod
+    def _check(cls, doc, oid):
+        if doc is None:
+            raise DocumentNotFound(oid)
+        return doc
+
+    @_error_logger
+    async def create_document(self, model: ModelMetaclass, document: dict) -> dict:
         """Fields in `document` not defined in `model` will be quietly ignored"""
-        document = model(**document).dict(by_alias=by_alias)
+        document = model(**document).dict(by_alias=True)
         await self.db[model.__tablename__].insert_one(document)
         return document
 
-    async def read_document(self, model: ModelMetaclass, oid: str) -> dict:
-        try:
-            document = await self.db[model.__tablename__].find_one({"_id": PyObjectId(oid)})
-        except InvalidId:  # Second attempt if _id is not a BSON ObjectId
-            document = await self.db[model.__tablename__].find_one({"_id": oid})
-        if document is None:
-            raise DocumentNotFound(oid)
-        return document
+    @_error_logger
+    async def read_document(self, model: ModelMetaclass, oid: str) -> dict | None:
+        oid = self._parse_oid(oid)
+        return self._check(await self.db[model.__tablename__].find_one({"_id": oid}), oid)
 
-    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict:
+    @_error_logger
+    async def update_document(self, model: ModelMetaclass, oid: str, update: dict) -> dict | None:
         """Will quietly work even if `update` includes fields not defined in `model`"""
-        try:
-            match = {"_id": PyObjectId(oid)}
-        except InvalidId:
-            match = {"_id": oid}
-        update = {"$set": update}
-        document = await self.db[model.__tablename__].find_one_and_update(match, update, return_document=True)
-        if document is None:
-            raise DocumentNotFound(oid)
-        return document
+        modify = ({"_id": self._parse_oid(oid)}, {"$set": update})
+        return self._check(await self.db[model.__tablename__].find_one_and_update(*modify, return_document=True), oid)
 
-    async def delete_document(self, model: ModelMetaclass, oid: str):
-        try:
-            delete = await self.db[model.__tablename__].delete_one({"_id": PyObjectId(oid)})
-        except InvalidId:
-            delete = await self.db[model.__tablename__].delete_one({"_id": oid})
-        if delete.deleted_count == 0:
-            raise DocumentNotFound(oid)
+    @_error_logger
+    async def delete_document(self, model: ModelMetaclass, oid: str) -> dict | None:
+        oid = self._parse_oid(oid)
+        return self._check(await self.db[model.__tablename__].find_one_and_delete({"_id": oid}), oid)
 
+    @_error_logger
     async def count_documents(self, model: ModelMetaclass, q: BaseQuery) -> int:
         try:
             (total,) = await self.db[model.__tablename__].aggregate(q.count_pipeline()).to_list(1)
@@ -116,15 +152,6 @@ class MongoConnection:
             return 0
         return total["total"]
 
-    async def read_multiple_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
-        return [_ async for _ in self.db[model.__tablename__].aggregate(q.pipeline())]
-
-    async def read_paginated_documents(self, model: ModelMetaclass, q: BasePaginatedQuery) -> dict:
-        total = await self.count_documents(model, q)
-        results = await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(q.limit)
-        return {
-            "count": total,
-            "next": q.page + 1 if q.skip + q.limit < total else None,
-            "previous": q.page - 1 if q.page > 1 else None,
-            "results": results,
-        }
+    @_error_logger
+    async def read_documents(self, model: ModelMetaclass, q: BaseQuery) -> list[dict]:
+        return await self.db[model.__tablename__].aggregate(q.pipeline()).to_list(None)

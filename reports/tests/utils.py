@@ -5,6 +5,7 @@ from bson import ObjectId
 from fastapi.testclient import TestClient
 
 from reports.main import app
+from reports.utils import REPORT_TYPES
 
 
 client = TestClient(app)
@@ -23,22 +24,8 @@ def report_factory(**kwargs):
         "solved": False,
         "source": "source",
         "observation": "observation",
-        "report_type": "report_type",
+        "report_type": random.choice(REPORT_TYPES),
         "owner": "owner"
-    }
-    report.update(kwargs)
-    return report
-
-
-def report_by_object_factory(**kwargs):
-    report = {
-        "object": "AL" + ''.join(random.choices('1234567890', k=7)),
-        "first_date": datetime.utcnow(),
-        "last_date": datetime.utcnow(),
-        "count": 1,
-        "source": ["source"],
-        "report_type": ["report_type"],
-        "users": ["user"]
     }
     report.update(kwargs)
     return report
@@ -54,15 +41,3 @@ def json_converter(report):
         else:
             output[k] = v
     return output
-
-
-def create_reports(n=1):
-    return [report_factory() for _ in range(n)]
-
-
-def create_reports_by_object(n=1):
-    return [report_by_object_factory() for _ in range(n)]
-
-
-def create_jsons(reports):
-    return [json_converter(report) for report in reports]

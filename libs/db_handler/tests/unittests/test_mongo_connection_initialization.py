@@ -2,19 +2,11 @@ from unittest import mock
 
 import pytest
 from db_handler import MongoConnection
-
-
-input_settings = {
-    "host": "host",
-    "port": 1,
-    "username": "user",
-    "password": "pass",
-    "database": "db"
-}
+from ..utils import input_settings
 
 
 def test_construction_has_proper_configuration():
-    conn = MongoConnection(input_settings)
+    conn = MongoConnection(**input_settings)
 
     assert conn._config.db == input_settings["database"]
     expected_config = {k: v for k, v in input_settings.items() if k != "database"}
@@ -28,7 +20,7 @@ def test_construction_turns_additional_options_to_lower_camel_case():
     new_input = input_settings.copy()
     new_input[extra] = extra_val
 
-    conn = MongoConnection(new_input)
+    conn = MongoConnection(**new_input)
 
     assert conn._config.db == new_input["database"]
     expected_config = {k: v for k, v in new_input.items() if k not in ("database", extra)}
@@ -39,7 +31,7 @@ def test_construction_turns_additional_options_to_lower_camel_case():
 def _check_missing(missing):
     bad_input = {k: v for k, v in input_settings.items() if k != missing}
     with pytest.raises(ValueError, match=f"Missing keys: {missing.upper()}"):
-        MongoConnection(bad_input)
+        MongoConnection(**bad_input)
 
 
 def test_construction_fails_if_missing_database():
@@ -65,12 +57,12 @@ def test_construction_fails_if_missing_password():
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
 async def test_connection_creates_async_motor_client(mock_client):
-    conn = MongoConnection(input_settings)
+    conn = MongoConnection(**input_settings)
     await conn.connect()
 
     assert conn._client == mock_client.return_value
     expected = {k: v for k, v in input_settings.items() if k != "database"}
-    mock_client.assert_called_once_with(**expected, connect=True)
+    mock_client.assert_called_once_with(**expected)
 
 
 @pytest.mark.asyncio
@@ -79,7 +71,7 @@ async def test_connection_gets_db_from_client(mock_client):
     mock_db = mock.MagicMock()
     mock_client.return_value.__getitem__.return_value = mock_db
 
-    conn = MongoConnection(input_settings)
+    conn = MongoConnection(**input_settings)
     await conn.connect()
     db = conn.db
 
@@ -90,7 +82,7 @@ async def test_connection_gets_db_from_client(mock_client):
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
 async def test_connection_closing(mock_client):
-    conn = MongoConnection(input_settings)
+    conn = MongoConnection(**input_settings)
     await conn.connect()
     await conn.close()
 
@@ -101,6 +93,6 @@ async def test_connection_closing(mock_client):
 @pytest.mark.asyncio
 @mock.patch('db_handler._connection.AsyncIOMotorClient')
 async def test_connection_using_async_context_manager(mock_client):
-    async with MongoConnection(input_settings) as conn:
+    async with MongoConnection(**input_settings) as conn:
         assert conn._client == mock_client.return_value
     assert conn._client is None

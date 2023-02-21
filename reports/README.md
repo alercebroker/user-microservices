@@ -1,5 +1,16 @@
 # Reports API
 
+## Deployment
+
+The following environmental variables are required unless noted:
+* `MONGODB_HOST`: IP or host name for MongoDB
+* `MONGODB_PORT`: Port used by MongoDB
+* `MONGODB_USERNAME`: Username to connect to the database
+* `MONGODB_PASSWORD`: Password for the given user
+* `MONGODB_DATABASE`: Name of the database the contains the collections of interest
+* `ALERTS_API_URL`: Base URL for the alerts API (used only for generating CSV files)
+* `ROOT_PATH` (optional): Base URL path. Needed when, for instance, running nginx with a prefix
+
 ## Development
 
 Install everything using poetry:
@@ -12,41 +23,19 @@ To run unit tests:
 poetry run pytest tests/unittest
 ```
 
-To run integration tests:
+To run integration tests (this will use the values in `.env.test`):
 ```commandline
 poetry run pytest tests/integration
 ```
 
-In order to run the API locally, first you need to have
-a MongoDB instance to connect to. It is possible to use the same 
-database used for running the integration tests by running:
+In order to run the API locally, you can run:
 ```commandline
-docker compose -f tests/docker-compose.yml up -d
+docker compose up --build -d reports-api
 ```
-If the MongoDB image is up, it won't be possible to run the integration 
-tests. To stop the container, run:
-```commandline
-docker compose -f tests/docker-compose.yml down
-```
-When running the container, the database already comes with a few
-mock reports already inserted.
-
-Afterwards, you can run the API using:
-```commandline
-uvicorn reports.main:app --reload
-```
-The `--reload` option allows for changes done in the source code to
-be detected and restart the API to reflect those changes automatically.
-When running the API in this way, it will use the values in `.env.test`
-to initialize the database connection. In a standard run, it should use 
-proper environmental variables to define the settings.
-
-The environmental variables required are:
-* `MONGODB_HOST`: IP or host name for MongoDB
-* `MONGODB_PORT`: Port used by MongoDB
-* `MONGODB_USERNAME`: Username to connect to the database
-* `MONGODB_PASSWORD`: Password for the given user
-* `MONGODB_DATABASE`: Name of the database the contains the collections of interest
+This will create an instance of MongoDB and build the reports API
+based on the values given in the `docker-compose.yml` file at the 
+repository root. When using the unmodified file, you can access 
+the API at http://localhost:8000.
 
 **Note:** The docker image must be built from the root of the monorepo, 
 not from the location of the `Dockerfile`.

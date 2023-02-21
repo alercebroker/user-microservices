@@ -5,11 +5,12 @@ from unittest import mock
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 
 from reports.database import models
-from reports.schemas import ReportIn
 from .. import utils
 
 report = utils.report_factory()
 endpoint = "/"
+
+connection = 'reports.routes.db'
 
 
 @mock.patch('reports.database.models.PyObjectId')
@@ -35,14 +36,14 @@ def test_now_utc_datetime_has_millisecond_resolution_and_strips_timezone(mock_da
     mock_datetime.now.assert_called_once_with(timezone.utc)
 
 
-@mock.patch('reports.routes.database.get_connection')
+@mock.patch(connection)
 def test_post_report_ignores_fields_not_defined_in_schema(mock_connection):
     date = datetime(2023, 1, 1, 0, 0, 0)
     oid = utils.random_oid()
     # Additional fields -> _id and date
 
     create_document = mock.AsyncMock()
-    mock_connection.return_value.create_document = create_document
+    mock_connection.create_document = create_document
     expected = report.copy()
     expected["_id"] = oid
     expected["date"] = date
@@ -64,21 +65,21 @@ def test_post_report_fails_if_missing_fields_defined_in_schema():
     assert response.status_code == 422
 
 
-@mock.patch('reports.routes.database.get_connection')
+@mock.patch(connection)
 def test_post_report_duplicate_fails(mock_connection):
     create_document = mock.AsyncMock()
     create_document.side_effect = DuplicateKeyError(error="")
-    mock_connection.return_value.create_document = create_document
+    mock_connection.create_document = create_document
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 400
 
 
-@mock.patch('reports.routes.database.get_connection')
+@mock.patch(connection)
 def test_post_report_fails_if_database_is_down(mock_connection):
     create_document = mock.AsyncMock()
     create_document.side_effect = ServerSelectionTimeoutError()
-    mock_connection.return_value.create_document = create_document
+    mock_connection.create_document = create_document
 
     response = utils.client.post(endpoint, content=json.dumps(utils.json_converter(report)))
     assert response.status_code == 503

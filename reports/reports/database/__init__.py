@@ -1,1 +1,1 @@
-from ._getters import *
+from ._connection import *

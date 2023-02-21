@@ -14,4 +14,5 @@ RUN poetry install --no-interaction --no-cache --without=dev --no-root
 COPY ./reports /app/src
 RUN poetry install --no-interaction --no-cache --only-root
 
-CMD ["uvicorn", "reports.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000
+CMD ["uvicorn", "reports.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-config", "logging.yml"]

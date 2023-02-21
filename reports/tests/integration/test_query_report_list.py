@@ -2,7 +2,7 @@ import pytest
 
 from .. import utils
 
-endpoint = '/'
+endpoint = '/reports'
 
 total = 10  # Number of reports in mongo-init.js
 page_size = total // 3

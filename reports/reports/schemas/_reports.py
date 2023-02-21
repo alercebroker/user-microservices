@@ -12,7 +12,7 @@ class _PyObjectIdSchema(PyObjectId):
 
     @classmethod
     def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+        field_schema.update(type="string")  # pragma: no cover
 
 
 class ReportOut(models.Report, metaclass=SchemaMetaclass):

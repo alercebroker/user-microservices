@@ -19,7 +19,7 @@ pytest-asyncio = "^0.20.3"
 pytest-docker = "^1.0.1"
 
 [tool.black]
-line-length = 127
+line-length = 125
 
 [build-system]
 requires = ["poetry-core"]

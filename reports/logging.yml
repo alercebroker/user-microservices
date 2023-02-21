@@ -1,0 +1,23 @@
+version: 1
+disable_existing_loggers: true
+
+formatters:
+  basic:
+    (): uvicorn.logging.DefaultFormatter
+    format: "%(levelprefix)s %(asctime)s - %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: basic
+    level: DEBUG
+
+loggers:
+  uvicorn:
+    handlers: [console]
+    propagate: true
+    level: DEBUG
+  connection:
+    handlers: [console]
+    level: DEBUG
