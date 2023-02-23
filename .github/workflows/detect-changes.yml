@@ -31,7 +31,7 @@ jobs:
               - 'reports/**'
               - 'libs/query/**'
               - 'libs/db_handler/**'
-            reports-api:
+            users-api:
               - 'users/**'
               - 'libs/query/**'
               - 'libs/db_handler/**'
