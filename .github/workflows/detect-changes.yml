@@ -5,8 +5,8 @@ on:
       reports-api:
         value: ${{ jobs.detect-changes.outputs.reports-api }}
       users-api:
-        value: 
-      db-lib: ${{ jobs.detect-changes.outputs.users-api }}
+        value:  ${{ jobs.detect-changes.outputs.users-api }}
+      db-lib:
         value: ${{ jobs.detect-changes.outputs.db-lib }}
       query-lib:
         value: ${{ jobs.detect-changes.outputs.query-lib }}
