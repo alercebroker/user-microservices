@@ -28,7 +28,7 @@ jobs:
     uses: ./.github/workflows/test-template.yml
     with:
       package: reports
-  reports-api:
+  users-api:
     needs: detect-changes
     if: needs.detect-changes.outputs.users-api == 'true'
     uses: ./.github/workflows/test-template.yml
