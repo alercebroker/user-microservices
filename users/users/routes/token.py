@@ -1,14 +1,14 @@
 
 from db_handler import DocumentNotFound
-from ..dependencies import get_mongo_client, get_jwt_helper
-from ..models import TokenIn, RefreshIn
+from users.users.dependencies import get_mongo_client, get_jwt_helper
+from users.users.models import TokenIn, RefreshIn
 
 from fastapi import APIRouter, Depends
 
 router = APIRouter()
 
 
-@router.get(
+@router.post(
     "/current"
 )
 async def current_user(
@@ -44,5 +44,5 @@ async def refresh_token(
 ):
     token_content = helper.decrypt_user_token(token.token)
     user = db_client.get_user_by_id(token_content["user_id"])
-    new_token = helper.create_refresh_token(user)
+    new_token = helper.create_user_token(user["id"])
     return new_token

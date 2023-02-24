@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 
 from db_handler import DocumentNotFound
-from ..dependencies import get_password_auth_client, get_mongo_client, get_jwt_helper
-from ..models import NewUserIn, PasswordLoginIn
+from users.users.dependencies import get_password_auth_client, get_mongo_client, get_jwt_helper
+from users.users.models import NewUserIn, PasswordLoginIn
 
 from fastapi import APIRouter, Depends
 
@@ -20,7 +20,7 @@ async def new_user(
     # check if user exists
     try:
         user = db_client.get_user_by_username(new_user.username)
-        return 400
+        raise HTTPException(status_code=400, detail="User exist")
     except DocumentNotFound:
         # create new user
         new_user_dict = {
@@ -34,12 +34,9 @@ async def new_user(
             }
         }
         user = db_client.create_new_user(new_user_dict)
-    except Exception as e:
-        # otro error
-        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    user_token = helper.create_user_token(user)
-    refresh_token = helper.create_refresh_token(user)    
+    user_token = helper.create_user_token(user["id"])
+    refresh_token = helper.create_refresh_token(user["id"])    
     
     return {
         "access": user_token,
@@ -58,8 +55,8 @@ async def login(
     user = db_client.get_user_by_username(login.username)
     match = auth_client.validate_password(login.password, user["auth_source"]["password"])
     if match:
-        user_token = helper.create_user_token(user)
-        refresh_token = helper.create_refresh_token(user)    
+        user_token = helper.create_user_token(user["id"])
+        refresh_token = helper.create_refresh_token(user["id"])    
     
         return {
             "access": user_token,
@@ -67,4 +64,4 @@ async def login(
         }
     else:
         # password o user malo
-        return 400
+        raise HTTPException(status_code=400)

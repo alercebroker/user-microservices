@@ -53,7 +53,7 @@ class JWTHelperTestCase(unittest.TestCase):
 
         # for refresh token
         refresh_exp_time = self.get_shifted_timestamp(TEST_REFRESH_TOKEN_DURATION)
-        with mock.patch('utils.jwt.helpers.aget_expiration_time') as mock_get_exp:
+        with mock.patch('utils.jwt.helpers.get_expiration_time') as mock_get_exp:
             mock_get_exp.return_value = refresh_exp_time
             test_refresh_token = self.auth_helper.create_refresh_token(456)
         decrypted_refresh_token = self.decrypt_token(test_refresh_token)
@@ -131,3 +131,4 @@ class JWTHelperTestCase(unittest.TestCase):
         encrypted_test_token = self.encrypt_test_token(test_expired_refresh_token)
         with self.assertRaises(jwt.ExpiredSignatureError):
             self.auth_helper.decrypt_refresh_token(encrypted_test_token)
+ 
