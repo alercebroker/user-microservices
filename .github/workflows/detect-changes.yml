@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       reports-api: ${{ steps.changes.outputs.reports-api }}
-      users-api: ${{ steps.changes.outputs.userss-api }}
+      users-api: ${{ steps.changes.outputs.users-api }}
       db-lib: ${{ steps.changes.outputs.db-lib }}
       query-lib: ${{ steps.changes.outputs.query-lib }}
     steps:
