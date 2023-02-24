@@ -1,10 +1,8 @@
 from fastapi import HTTPException
 
 from db_handler import DocumentNotFound
-from ..auth import get_google_auth_client
+from ..dependencies import get_google_auth_client, get_mongo_client, get_jwt_helper
 from ..models import GoogleLoginIn
-from ..database import get_mongo_client, User, GoogleAuth
-from ..utils import get_jwt_helper
 
 from fastapi import APIRouter, Depends
 
@@ -13,13 +11,14 @@ router = APIRouter()
 @router.post(
     "/o/google-oauth2"
 )
-async def login(GoogleLoginIn,
-                auth_client=Depends(get_google_auth_client),
-                db_client=Depends(get_mongo_client),
-                helper=Depends(get_jwt_helper)
-                ):
+async def login(
+    google_data: GoogleLoginIn,
+    auth_client=Depends(get_google_auth_client),
+    db_client=Depends(get_mongo_client),
+    helper=Depends(get_jwt_helper)
+):
     # viene con user data 
-    google_response = await auth_client.get_user_data(GoogleLoginIn.code)
+    google_response = await auth_client.get_user_data(google_data.code)
     user_email = google_response["email"]
 
     # ver si tengo este user en db}

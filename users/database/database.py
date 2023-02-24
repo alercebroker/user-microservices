@@ -4,7 +4,7 @@ from db_handler import MongoConnection, DocumentNotFound
 from ..utils import SingletonMetaClass
 from .models import User, _utcnow
 
-class MongoClient(MongoConnection, meta=SingletonMetaClass):
+class MongoClient(MongoConnection, metaclass=SingletonMetaClass):
     #Tiene que ser clase para heredar de mongo conection
     def __init__(self, config) -> None:
         super().__init__(self, config)

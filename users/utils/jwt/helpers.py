@@ -1,7 +1,12 @@
 import jwt
-# no se tiene que importar user, los metodos van a pedir todos los campos
+from datetime import datetime, timedelta
+
+def get_expiration_time(delta_seconds):
+    dt = datetime.now() + timedelta(seconds=delta_seconds)
+    return dt
 
 class JWTHelper(object):
+    issuer = "Users Microservice"
 
     required_auth_token_fields = [
         "user_id",
@@ -18,22 +23,22 @@ class JWTHelper(object):
         self.settings = settings
 
     def _create_token(self, payload: dict):
-        token = jwt.encode(payload, key=self.settings.secret_key, algorithm="HS256")
+        token = jwt.encode(payload, key=self.settings["secret_key"], algorithm="HS256")
         return token
 
     def create_user_token(self, user_id):
         token_payload = {
             "user_id": user_id,
-            "iss": "h",
-            "exp": 1
+            "iss": self.issuer,
+            "exp": get_expiration_time(self.settings["auth_token_duration"])
         }
         return self._create_token(token_payload)
 
     def create_refresh_token(self, user_id):
         token_payload = {
             "user_id": user_id,
-            "iss": "h",
-            "exp": 1
+            "iss": self.issuer,
+            "exp": get_expiration_time(self.settings["refresh_token_duration"])
         }
         return self._create_token(token_payload)
     
@@ -41,7 +46,7 @@ class JWTHelper(object):
         try:
             jwt.decode(
                 token,
-                key=self.settings.secret_key,
+                key=self.settings["secret_key"],
                 algorithms=["HS256"],
                 options={
                     "require": required_fields
@@ -55,7 +60,7 @@ class JWTHelper(object):
     def _decrypt_token(self, token: str, required_fields: list[str]):
         decrypted_token = jwt.decode(
             token,
-            key=self.settings.secret_key,
+            key=self.settings["secret_key"],
             algorithms=["HS256"],
             options={
                 "require": required_fields

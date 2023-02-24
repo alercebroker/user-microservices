@@ -1,1 +1,2 @@
 from .google_auth_client import GoogleOAuthClient
+from .password_auth import PasswordAuthClient

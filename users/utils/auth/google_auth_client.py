@@ -1,7 +1,7 @@
 from authlib.integrations.starlette_client import OAuth
 from ..singleton_helper import SingletonMetaClass
 
-class GoogleOAuthClient(object, meta=SingletonMetaClass):
+class GoogleOAuthClient(object, metaclass=SingletonMetaClass):
     oauth = None
     
     def __init__(self, config) -> None:    
